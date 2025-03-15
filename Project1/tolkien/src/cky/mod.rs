@@ -34,7 +34,6 @@ pub fn cky_parse_jurafsky(sentence: &str, grammar: &CfgJurafsky) -> bool {
         }
     }
 
-    // If 'S' is in the top-right cell, the sentence is valid
     table[0][n - 1].contains("S")
 }
 
@@ -59,7 +58,15 @@ pub fn cky_parse_quenya(sentence: &str, grammar: &CfgQuenya) -> bool {
             for k in i..j {
                 let left_set = table[i][k].clone();
                 let right_set = table[k + 1][j].clone();
-
+                println!(
+                    "Combining table[{}][{}] (left: {:?}) and table[{}][{}] (right: {:?})",
+                    i,
+                    k,
+                    left_set,
+                    k + 1,
+                    j,
+                    right_set
+                );
                 for b in left_set {
                     for c in &right_set {
                         let possible_lhs = grammar.get_non_terminals(&[b.clone(), c.clone()]);
@@ -69,7 +76,5 @@ pub fn cky_parse_quenya(sentence: &str, grammar: &CfgQuenya) -> bool {
             }
         }
     }
-
-    // If 'S' is in the top-right cell, the sentence is valid
     table[0][n - 1].contains("S")
 }

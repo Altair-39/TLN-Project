@@ -1,6 +1,7 @@
 use crate::grammar::CfgJurafsky;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::vec;
 
 impl CfgJurafsky {
     pub fn new() -> Self {
@@ -168,6 +169,20 @@ impl CfgJurafsky {
         rules.insert(
             "Adv1".to_string(),
             vec![vec!["never".to_string()], vec!["rarely".to_string()]],
+        );
+
+        rules.insert(
+            "ADJP".to_string(),
+            vec![vec!["JJ".to_string(), "PP".to_string()]],
+        );
+
+        rules.insert(
+            "JJ".to_string(),
+            vec![
+                vec!["cold".to_string()],
+                vec!["empty".to_string()],
+                vec!["full".to_string()],
+            ],
         );
 
         rules.insert("Adv2".to_string(), vec![vec!["ever".to_string()]]);
