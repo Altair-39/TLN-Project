@@ -1,0 +1,19 @@
+{
+    "S": [
+        ["NP", "VP"]
+    ],
+    "VP": [
+        ["VP", "ADV"],
+        ["V", "NP"]
+    ],
+    "NP": [
+        ["Paolo"],
+        ["Francesca"]
+    ],
+    "V": [
+        ["ama"]
+    ],
+    "ADV": [
+        ["dolcemente"]
+    ]
+}

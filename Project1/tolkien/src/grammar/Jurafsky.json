@@ -1,7 +1,14 @@
 {
   "S": [
     ["NP", "VP"], 
-    ["X1", "VP"]
+    ["X1", "VP"],
+    ["Verb", "NP"],
+    ["X2", "PP"],
+    ["Verb", "PP"],
+    ["VP", "PP"],
+    ["book"],
+    ["include"],
+    ["prefer"]
   ],
   "X1": [
     ["Aux", "NP"]
@@ -11,47 +18,39 @@
     ["do"]
   ],
   "NP": [
+    ["Det", "Nominal"],
+    ["Det", "Noun"],
     ["I"],
     ["she"],
+    ["he"],
     ["me"],
     ["you"],
-    ["Huston"],
-    ["NWA"],
-    ["Det", "Nominal"],
-    ["Det", "Noun"]
+    ["Houston"],
+    ["TWA"]
   ],
   "Nominal": [
-    ["morning"],
-    ["quick"],
-    ["cool"],
-    ["adventurous"],
-    ["mountain"],
-    ["cold"],
     ["Nominal", "Noun"],
     ["Nominal", "PP"],
-    ["X3", "Nominal"]
+    ["book"],
+    ["flight"],
+    ["meal"],
+    ["money"],
+    ["morning"]
   ],
-  "X3": [
-    ["X3", "Nominal"],
-    ["morning"],
-    ["quick"],
-    ["cool"],
-    ["adventurous"],
-    ["mountain"]
+  "Noun": [
+    ["book"],
+    ["flight"],
+    ["meal"],
+    ["money"]
   ],
   "VP": [
     ["book"],
     ["include"],
     ["prefer"],
-    ["love"],
-    ["like"],
-    ["drink"],
-    ["Verb", "Nominal"],
     ["Verb", "NP"],
     ["Verb", "PP"],
     ["X2", "PP"],
-    ["VP", "PP"],
-    ["Adverb", "VP"]
+    ["VP", "PP"]
   ],
   "X2": [
     ["Verb", "NP"]
@@ -65,31 +64,21 @@
     ["the"],
     ["a"]
   ],
-  "Noun": [
-    ["book"],
-    ["flight"],
-    ["meal"],
-    ["money"],
-    ["day"], 
-    ["water"]
-  ],
-  "Verb": [
+   "Verb": [
     ["book"],
     ["include"],
-    ["prefer"], 
-    ["love"],
-    ["like"],
-    ["drink"]
+    ["prefer"] 
   ],
   "Pronoun": [
     ["I"],
     ["she"],
+    ["he"],
     ["me"],
     ["you"]
   ],
   "Proper-Noun": [
-    ["Huston"], 
-    ["NWA"]
+    ["Houston"], 
+    ["United"]
   ],
   "Preposition": [
     ["from"],
@@ -97,28 +86,5 @@
     ["on"],
     ["near"], 
     ["through"]
-  ],
-  "Adverb": [
-    ["Adv1", "Adv2"],
-    ["definitely"],
-    ["often"],
-    ["never"],
-    ["really"],
-    ["rarely"]
-  ],
-  "Adv1": [
-    ["never"],
-    ["rarely"]
-  ],
-  "ADJP": [
-    ["JJ", "PP"]
-  ],
-  "JJ": [
-    ["cold"],
-    ["empty"],
-    ["full"]
-  ],
-  "Adv2": [
-    ["ever"]
   ]
-}
+ }

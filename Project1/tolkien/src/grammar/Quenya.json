@@ -5,8 +5,7 @@
     ],
     "NP": [
         ["Det", "Noun"],
-        ["Noun"],
-        ["NP"]
+        ["Noun"]
     ],
     "PronVerb": [
         ["Nanye"],
@@ -24,6 +23,7 @@
         ["eldar"],
         ["atan"],
         ["eldan"],
+        ["lumba"],
         ["tecil"]
     ],
     "Verb": [
