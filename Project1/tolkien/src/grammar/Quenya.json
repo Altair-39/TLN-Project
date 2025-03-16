@@ -4,15 +4,23 @@
         ["PronVerb", "Noun"]
     ],
     "NP": [
-        ["Det", "Noun"],
-        ["Noun"]
+        ["Det", "NP"],
+        ["NP", "Noun"],
+        ["hesto"],
+        ["macil"],
+        ["aran"],
+        ["aiwi"],
+        ["eldar"],
+        ["atan"],
+        ["eldan"],
+        ["lumba"],
+        ["tecil"]
     ],
     "PronVerb": [
         ["Nanye"],
         ["Nalme"]
     ],
     "VP": [
-        ["Verb"],
         ["Verb", "NP"]
     ],
     "Noun": [
@@ -29,7 +37,6 @@
     "Verb": [
         ["same"],
         ["tira"],
-        ["Nalme"],
         ["antane"]
     ],
     "Det": [
