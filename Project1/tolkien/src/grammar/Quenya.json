@@ -1,0 +1,39 @@
+{
+    "S": [
+        ["NP", "VP"],
+        ["PronVerb", "Noun"]
+    ],
+    "NP": [
+        ["Det", "Noun"],
+        ["Noun"],
+        ["NP"]
+    ],
+    "PronVerb": [
+        ["Nanye"],
+        ["Nalme"]
+    ],
+    "VP": [
+        ["Verb"],
+        ["Verb", "NP"]
+    ],
+    "Noun": [
+        ["hesto"],
+        ["macil"],
+        ["aran"],
+        ["aiwi"],
+        ["eldar"],
+        ["atan"],
+        ["eldan"],
+        ["tecil"]
+    ],
+    "Verb": [
+        ["same"],
+        ["tira"],
+        ["Nalme"],
+        ["antane"]
+    ],
+    "Det": [
+        ["I"],
+        ["i"]
+    ]
+}
