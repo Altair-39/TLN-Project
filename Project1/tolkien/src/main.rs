@@ -160,7 +160,7 @@ fn main() {
                             break;
                         }
                         Ok(sentence) => {
-                            if cky_parse(&sentence, &grammar) {
+                            if cky_parse(&sentence, &grammar, "output.json") {
                                 println!("'{}' is grammatically valid!\n", sentence);
                             } else {
                                 println!("'{}' is NOT grammatically valid.\n", sentence);

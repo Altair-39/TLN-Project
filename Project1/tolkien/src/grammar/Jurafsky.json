@@ -1,7 +1,15 @@
 {
-  "S": [["NP", "VP"], ["X1", "VP"]],
-  "X1": [["Aux", "NP"]],
-  "Aux": [["does"], ["do"]],
+  "S": [
+    ["NP", "VP"], 
+    ["X1", "VP"]
+  ],
+  "X1": [
+    ["Aux", "NP"]
+  ],
+  "Aux": [
+    ["does"],
+    ["do"]
+  ],
   "NP": [
     ["I"],
     ["she"],
@@ -45,14 +53,51 @@
     ["VP", "PP"],
     ["Adverb", "VP"]
   ],
-  "X2": [["Verb", "NP"]],
-  "PP": [["Preposition", "NP"]],
-  "Det": [["that"], ["this"], ["the"], ["a"]],
-  "Noun": [["book"], ["flight"], ["meal"], ["money"], ["day"], ["water"]],
-  "Verb": [["book"], ["include"], ["prefer"], ["love"], ["like"], ["drink"]],
-  "Pronoun": [["I"], ["she"], ["me"], ["you"]],
-  "Proper-Noun": [["Huston"], ["NWA"]],
-  "Preposition": [["from"], ["to"], ["on"], ["near"], ["through"]],
+  "X2": [
+    ["Verb", "NP"]
+  ],
+  "PP": [
+    ["Preposition", "NP"]
+  ],
+  "Det": [
+    ["that"],
+    ["this"],
+    ["the"],
+    ["a"]
+  ],
+  "Noun": [
+    ["book"],
+    ["flight"],
+    ["meal"],
+    ["money"],
+    ["day"], 
+    ["water"]
+  ],
+  "Verb": [
+    ["book"],
+    ["include"],
+    ["prefer"], 
+    ["love"],
+    ["like"],
+    ["drink"]
+  ],
+  "Pronoun": [
+    ["I"],
+    ["she"],
+    ["me"],
+    ["you"]
+  ],
+  "Proper-Noun": [
+    ["Huston"], 
+    ["NWA"]
+  ],
+  "Preposition": [
+    ["from"],
+    ["to"],
+    ["on"],
+    ["near"], 
+    ["through"]
+  ],
   "Adverb": [
     ["Adv1", "Adv2"],
     ["definitely"],
@@ -61,8 +106,19 @@
     ["really"],
     ["rarely"]
   ],
-  "Adv1": [["never"], ["rarely"]],
-  "ADJP": [["JJ", "PP"]],
-  "JJ": [["cold"], ["empty"], ["full"]],
-  "Adv2": [["ever"]]
+  "Adv1": [
+    ["never"],
+    ["rarely"]
+  ],
+  "ADJP": [
+    ["JJ", "PP"]
+  ],
+  "JJ": [
+    ["cold"],
+    ["empty"],
+    ["full"]
+  ],
+  "Adv2": [
+    ["ever"]
+  ]
 }
