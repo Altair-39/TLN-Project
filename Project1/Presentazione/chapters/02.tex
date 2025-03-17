@@ -38,4 +38,9 @@ for length in 2..=n {
 
 \subsection{Struttura}
 
+\begin{lstlisting}[language=rust, caption = Creazione delle regole per la grammatica]    
+let rules: HashMap<String, Vec<Vec<String>>> =
+            serde_json::from_str(&json_data).expect("Failed to parse JSON");
+\end{lstlisting}
+
 \subsection{Scrivere e Aggiungere Grammatiche}
