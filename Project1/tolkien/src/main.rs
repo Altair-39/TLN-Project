@@ -23,7 +23,7 @@ fn pause() {
 
 fn main() {
     loop {
-        let grammar_dir = "src/grammar";
+        let grammar_dir = "rsrc/grammar";
         clean();
         println!("╔════════════════════════════╗");
         println!("║     Choose a Grammar       ║");
@@ -66,7 +66,7 @@ fn main() {
                     }
                     Ok(sentence) => {
                         let source_path = Path::new(&sentence);
-                        let grammar_dir = Path::new("src/grammar");
+                        let grammar_dir = Path::new("rsrc/grammar");
 
                         if source_path.exists()
                             && source_path.extension().and_then(|ext| ext.to_str()) == Some("json")

@@ -9,7 +9,7 @@ pub struct Cfg {
 
 impl Cfg {
     pub fn new(grammar: &str) -> Self {
-        let file_path = format!("src/grammar/{}.json", grammar);
+        let file_path = format!("rsrc/grammar/{}.json", grammar);
 
         if !Path::new(&file_path).exists() {
             panic!("Grammar file '{}' does not exist", file_path);
