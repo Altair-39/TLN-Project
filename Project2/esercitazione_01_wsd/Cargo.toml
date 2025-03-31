@@ -1,6 +1,0 @@
-[package]
-name = "esercitazione_01_wsd"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]

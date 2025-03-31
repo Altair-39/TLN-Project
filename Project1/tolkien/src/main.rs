@@ -1,184 +1,473 @@
 mod cky;
 mod grammar;
+
 use cky::cky_parse;
+use crossterm::{
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
 use grammar::Cfg;
-use inquire::{Confirm, Select, Text};
-use std::fs;
-use std::io::{self};
-use std::path::Path;
+use grammarconversion::converter;
+use ratatui::{
+    backend::CrosstermBackend,
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::{Color, Modifier, Style},
+    text::{Line, Span, Text},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
+    Frame, Terminal,
+};
+use std::{fs, io, path::Path, time::Duration};
 
-fn clean() {
-    println!("\x1b[2J\x1b[H");
+#[derive(Debug, Clone)]
+struct AppState {
+    grammar_options: Vec<String>,
+    list_state: ListState,
+    mode: Mode,
+    input: String,
+    message: String,
+    message_timer: u8,
+    current_grammar_rules: String,
+    scroll_offset: u16,
 }
 
-fn pause() {
-    println!("Press any key to continue...");
-    let mut input = String::new();
-    match io::stdin().read_line(&mut input) {
-        Ok(_n) => {}
-        Err(error) => println!("error: {error}"),
-    }
-    clean();
+#[derive(Debug, Clone, PartialEq)]
+enum Mode {
+    MainMenu,
+    NewGrammar,
+    DeleteGrammar,
+    ParseSentence(String),
 }
 
-fn main() {
-    loop {
-        let grammar_dir = "rsrc/grammar";
-        clean();
-        println!("╔════════════════════════════╗");
-        println!("║     Choose a Grammar       ║");
-        println!("╚════════════════════════════╝");
+fn main() -> io::Result<()> {
+    // Setup terminal
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
 
-        let grammar_options: Vec<String> = fs::read_dir(grammar_dir)
-            .expect("Failed to read grammar directory")
-            .filter_map(|entry| {
-                entry.ok().and_then(|e| {
-                    let path = e.path();
-                    if path.extension()?.to_str()? == "json" {
-                        path.file_stem()?.to_str().map(|s| s.to_string())
-                    } else {
-                        None
+    // Initialize app state
+    let grammar_dir = "rsrc/grammar";
+    let grammar_options = get_grammar_options(grammar_dir)?;
+    let mut app_state = AppState {
+        grammar_options,
+        list_state: ListState::default().with_selected(Some(0)),
+        mode: Mode::MainMenu,
+        input: String::new(),
+        message: String::new(),
+        message_timer: 0,
+        current_grammar_rules: String::new(),
+        scroll_offset: 0,
+    };
+
+    // Main loop
+    let mut running = true;
+    while running {
+        terminal.draw(|f| ui(f, &mut app_state))?;
+
+        // Handle input
+        if event::poll(Duration::from_millis(100))? {
+            if let Event::Key(key_event) = event::read()? {
+                let grammar_name = match &app_state.mode {
+                    Mode::ParseSentence(name) => Some(name.clone()),
+                    _ => None,
+                };
+
+                match app_state.mode {
+                    Mode::MainMenu => {
+                        handle_main_menu(&mut app_state, key_event.code, &mut running, grammar_dir)?
                     }
-                })
-            })
-            .collect();
-
-        let mut options = grammar_options.clone();
-        options.sort();
-        options.push("Delete".to_string());
-        options.push("New".to_string());
-        options.push("Quit".to_string());
-
-        let name = Select::new("What grammar do you want to use?", options)
-            .with_help_message("Choose 'New' to add a new grammar, 'Delete' to delete a grammar or 'Quit' to quit the program.")
-            .prompt();
-        clean();
-
-        match name {
-            Ok(ref name) if *name == "New" => {
-                let sentence = Text::new("Insert the path to the JSON file you want to add.\n")
-                    .with_help_message("Type 'Quit' to return to the choice of the grammar.")
-                    .prompt();
-                match sentence {
-                    Ok(ref sentence) if sentence == "Quit" => {
-                        clean();
-                        break;
+                    Mode::NewGrammar => {
+                        handle_new_grammar(&mut app_state, key_event.code, grammar_dir)?
                     }
-                    Ok(sentence) => {
-                        let source_path = Path::new(&sentence);
-                        let grammar_dir = Path::new("rsrc/grammar");
-
-                        if source_path.exists()
-                            && source_path.extension().and_then(|ext| ext.to_str()) == Some("json")
-                        {
-                            let file_name = source_path.file_name().unwrap();
-                            let destination_path = grammar_dir.join(file_name);
-                            match fs::copy(source_path, &destination_path) {
-                                Ok(_) => {
-                                    println!("Successfully added the grammar file.");
-                                }
-                                Err(e) => {
-                                    println!("Failed to copy file: {}", e);
-                                }
-                            }
-                            pause();
-                        } else {
-                            println!("Invalid file. Ensure the file exists and is a JSON file.");
-                            pause();
-                        }
+                    Mode::DeleteGrammar => {
+                        handle_delete_grammar(&mut app_state, key_event.code, grammar_dir)?
                     }
-                    Err(_) => {
-                        println!("An error happened.\n");
-                        pause();
-                    }
-                }
-            }
-            Ok(ref name) if *name == "Delete" => {
-                let grammar_files: Vec<String> = fs::read_dir(grammar_dir)
-                    .expect("Failed to read grammar directory")
-                    .filter_map(|entry| {
-                        entry.ok().and_then(|e| {
-                            let path = e.path();
-                            if path.extension()?.to_str()? == "json" {
-                                path.file_name()?.to_str().map(String::from)
-                            } else {
-                                None
-                            }
-                        })
-                    })
-                    .collect();
-
-                if grammar_files.is_empty() {
-                    println!("No grammar files available to delete.");
-                    pause();
-                }
-
-                let file_to_delete =
-                    Select::new("Select a grammar file to delete:", grammar_files.clone()).prompt();
-
-                if let Ok(filename) = file_to_delete {
-                    let file_path = Path::new(grammar_dir).join(&filename);
-                    let confirm =
-                        Confirm::new(&format!("Are you sure you want to delete {}?", filename))
-                            .prompt();
-
-                    if let Ok(true) = confirm {
-                        if fs::remove_file(&file_path).is_ok() {
-                            println!("Deleted {}", filename);
-                        } else {
-                            println!("Failed to delete {}", filename);
-                        }
-                    }
-                }
-                pause();
-            }
-            Ok(ref name) if *name == "Quit" => {
-                let ans = Confirm::new("Do you really want to quit?")
-                    .with_default(false)
-                    .prompt();
-                match ans {
-                    Ok(true) => {
-                        clean();
-                        break;
-                    }
-                    Ok(false) => {}
-                    Err(_) => {
-                        println!("An error happened.\n");
-                        pause();
-                    }
-                }
-            }
-            Ok(name) => {
-                let grammar = Cfg::new(&name);
-                loop {
-                    let sentence = Text::new("Please, insert a phrase that you want to check.\n")
-                        .with_help_message("Type 'Quit' to return to the choice of the grammar.")
-                        .prompt();
-                    match sentence {
-                        Ok(ref sentence) if sentence == "Quit" => {
-                            clean();
-                            break;
-                        }
-                        Ok(sentence) => {
-                            if cky_parse(&sentence, &grammar, "output.json") {
-                                println!("'{}' is grammatically valid!\n", sentence);
-                            } else {
-                                println!("'{}' is NOT grammatically valid.\n", sentence);
-                            }
-                            pause();
-                        }
-                        Err(_) => {
-                            println!("An error happened.\n");
-                            pause();
+                    Mode::ParseSentence(_) => {
+                        if let Some(name) = grammar_name {
+                            handle_parse_sentence(
+                                &mut app_state,
+                                key_event.code,
+                                &name,
+                                grammar_dir,
+                            )?
                         }
                     }
                 }
             }
-            Err(_) => {
-                println!(
-                    "An error occurred when asking for your grammar selection, try again later."
-                );
+        }
+
+        // Handle message timer
+        if app_state.message_timer > 0 {
+            app_state.message_timer -= 1;
+            if app_state.message_timer == 0 {
+                app_state.message.clear();
             }
         }
     }
+
+    // Cleanup terminal
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
+
+    Ok(())
+}
+
+fn handle_main_menu(
+    app_state: &mut AppState,
+    key: KeyCode,
+    running: &mut bool,
+    grammar_dir: &str,
+) -> io::Result<()> {
+    match key {
+        KeyCode::Char('q') => *running = false,
+        KeyCode::Up => {
+            if let Some(selected) = app_state.list_state.selected() {
+                if selected > 0 {
+                    app_state.list_state.select(Some(selected - 1));
+                }
+            }
+        }
+        KeyCode::Down => {
+            if let Some(selected) = app_state.list_state.selected() {
+                if selected < app_state.grammar_options.len() + 1 {
+                    app_state.list_state.select(Some(selected + 1));
+                }
+            }
+        }
+        KeyCode::Enter => {
+            if let Some(selected) = app_state.list_state.selected() {
+                let options_count = app_state.grammar_options.len();
+                match selected {
+                    x if x == options_count => {
+                        app_state.mode = Mode::NewGrammar;
+                        app_state.input.clear();
+                    }
+                    x if x == options_count + 1 => {
+                        app_state.mode = Mode::DeleteGrammar;
+                        app_state.list_state.select(Some(0));
+                    }
+                    x if x == options_count + 2 => *running = false,
+                    _ => {
+                        let grammar_name = app_state.grammar_options[selected].clone();
+                        app_state.current_grammar_rules =
+                            get_grammar_rules(&grammar_name, grammar_dir)
+                                .unwrap_or_else(|_| "Could not load grammar rules".to_string());
+                        app_state.mode = Mode::ParseSentence(grammar_name);
+                        app_state.input.clear();
+                        app_state.scroll_offset = 0;
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn handle_new_grammar(app_state: &mut AppState, key: KeyCode, grammar_dir: &str) -> io::Result<()> {
+    match key {
+        KeyCode::Enter => {
+            let path = app_state.input.trim();
+            if !path.ends_with(".txt") {
+                app_state.message = "Error: File must be a .txt".to_string();
+                app_state.message_timer = 10;
+            } else {
+                let dest = Path::new(grammar_dir).join(Path::new(path).file_name().unwrap());
+                match fs::copy(path, dest) {
+                    Ok(_) => {
+                        app_state.message = "Grammar added!".to_string();
+                        app_state.message_timer = 10;
+                        app_state.grammar_options = get_grammar_options(grammar_dir)?;
+                        app_state.mode = Mode::MainMenu;
+                    }
+                    Err(e) => {
+                        app_state.message = format!("Error: {}", e);
+                        app_state.message_timer = 10;
+                    }
+                }
+            }
+        }
+        KeyCode::Char(c) => {
+            app_state.input.push(c);
+        }
+        KeyCode::Backspace => {
+            app_state.input.pop();
+        }
+        KeyCode::Esc => {
+            app_state.mode = Mode::MainMenu;
+            app_state.input.clear();
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn handle_delete_grammar(
+    app_state: &mut AppState,
+    key: KeyCode,
+    grammar_dir: &str,
+) -> io::Result<()> {
+    match key {
+        KeyCode::Enter => {
+            if let Some(selected) = app_state.list_state.selected() {
+                let grammar_name = &app_state.grammar_options[selected];
+                let path = Path::new(grammar_dir).join(format!("{}.txt", grammar_name));
+                match fs::remove_file(path) {
+                    Ok(_) => {
+                        app_state.message = format!("Deleted '{}'", grammar_name);
+                        app_state.message_timer = 10;
+                        app_state.grammar_options = get_grammar_options(grammar_dir)?;
+                        app_state.list_state.select(Some(0));
+                        app_state.mode = Mode::MainMenu;
+                    }
+                    Err(e) => {
+                        app_state.message = format!("Error: {}", e);
+                        app_state.message_timer = 10;
+                    }
+                }
+            }
+        }
+        KeyCode::Esc => {
+            app_state.mode = Mode::MainMenu;
+        }
+        KeyCode::Up => {
+            if let Some(selected) = app_state.list_state.selected() {
+                if selected > 0 {
+                    app_state.list_state.select(Some(selected - 1));
+                }
+            }
+        }
+        KeyCode::Down => {
+            if let Some(selected) = app_state.list_state.selected() {
+                if selected < app_state.grammar_options.len() - 1 {
+                    app_state.list_state.select(Some(selected + 1));
+                }
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn handle_parse_sentence(
+    app_state: &mut AppState,
+    key: KeyCode,
+    grammar_name: &str,
+    grammar_dir: &str,
+) -> io::Result<()> {
+    match key {
+        KeyCode::Up => {
+            app_state.scroll_offset = app_state.scroll_offset.saturating_sub(1);
+        }
+        KeyCode::Down => {
+            app_state.scroll_offset = app_state.scroll_offset.saturating_add(1);
+        }
+        KeyCode::Enter => {
+            let sentence = app_state.input.trim();
+            if sentence == "Quit" {
+                app_state.mode = Mode::MainMenu;
+                app_state.input.clear();
+            } else {
+                let txt_path = Path::new(grammar_dir).join(format!("{}.txt", grammar_name));
+                let json_path = txt_path.with_extension("json");
+
+                if !json_path.exists() {
+                    converter(txt_path.to_str().unwrap())?;
+                }
+
+                let grammar = Cfg::new(grammar_name);
+                let result = cky_parse(sentence, &grammar, "output.json");
+                app_state.message = if result.is_some() {
+                    "✅ Valid grammar!".to_string()
+                } else {
+                    "❌ Invalid grammar!".to_string()
+                };
+                app_state.message_timer = 20;
+                app_state.input.clear();
+            }
+        }
+        KeyCode::Char(c) => {
+            app_state.input.push(c);
+        }
+        KeyCode::Backspace => {
+            app_state.input.pop();
+        }
+        KeyCode::Esc => {
+            app_state.mode = Mode::MainMenu;
+            app_state.input.clear();
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn get_grammar_options(grammar_dir: &str) -> io::Result<Vec<String>> {
+    let mut options: Vec<String> = fs::read_dir(grammar_dir)?
+        .filter_map(|entry| {
+            let path = entry.ok()?.path();
+            if path.extension()?.to_str()? == "txt" {
+                path.file_stem()?.to_str().map(|s| s.to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    options.sort();
+    options.push("New".to_string());
+    options.push("Delete".to_string());
+    options.push("Quit".to_string());
+
+    Ok(options)
+}
+
+fn get_grammar_rules(grammar_name: &str, grammar_dir: &str) -> io::Result<String> {
+    fs::read_to_string(Path::new(grammar_dir).join(format!("{}.txt", grammar_name)))
+}
+
+fn ui(frame: &mut Frame, app_state: &mut AppState) {
+    // Main layout chunks
+    let main_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(1)
+        .constraints([
+            Constraint::Length(3), // Title
+            Constraint::Min(5),    // Main content
+            Constraint::Length(4), // Bottom area
+        ])
+        .split(frame.area());
+
+    // Title
+    let title = Paragraph::new("Grammar Parser").block(
+        Block::default()
+            .borders(Borders::ALL)
+            .style(Style::default().fg(Color::LightBlue)),
+    );
+    frame.render_widget(title, main_chunks[0]);
+
+    // Content area - split between instruction and grammar rules
+    let content_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3), // Instruction area
+            Constraint::Min(8),    // Scrollable grammar rules
+        ])
+        .split(main_chunks[1]);
+
+    // Render based on mode
+    match app_state.mode.clone() {
+        Mode::MainMenu => render_main_menu(frame, content_chunks[1], app_state),
+        Mode::NewGrammar => render_new_grammar(frame, content_chunks[0]),
+        Mode::DeleteGrammar => render_delete_grammar(frame, content_chunks[0], app_state),
+        Mode::ParseSentence(grammar_name) => {
+            // Instruction
+            let help_text = Paragraph::new(format!(
+                "Enter sentence to parse with '{}' (type 'Quit' to return)\n\
+                Use PageUp/PageDown to scroll grammar rules",
+                grammar_name
+            ));
+            frame.render_widget(help_text, content_chunks[0]);
+
+            // Grammar rules with scrolling
+            let rules_block = Block::default()
+                .title("Grammar Rules")
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::LightGreen));
+
+            let rules_text = Text::from(app_state.current_grammar_rules.as_str());
+            let rules = Paragraph::new(rules_text.clone())
+                .block(rules_block)
+                .scroll((app_state.scroll_offset, 0))
+                .wrap(Wrap { trim: true });
+
+            frame.render_widget(rules, content_chunks[1]);
+
+            // Show scroll position indicator if needed
+            if rules_text.height() > content_chunks[1].height as usize {
+                let scroll_info = Paragraph::new(format!(
+                    "Scroll: {}/{}",
+                    app_state.scroll_offset + 1,
+                    rules_text.height()
+                ))
+                .alignment(Alignment::Right);
+                frame.render_widget(scroll_info, content_chunks[1]);
+            }
+        }
+    }
+
+    // Bottom area - split between message and input
+    let bottom_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(1), // Message
+            Constraint::Length(3), // Input
+        ])
+        .split(main_chunks[2]);
+
+    // Always show message if it exists
+    if !app_state.message.is_empty() {
+        let message = Paragraph::new(app_state.message.as_str()).style(
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        );
+        frame.render_widget(message, bottom_chunks[0]);
+    }
+
+    // Show input only in modes that need it
+    if matches!(app_state.mode, Mode::NewGrammar | Mode::ParseSentence(_)) {
+        let input = Paragraph::new(app_state.input.as_str())
+            .block(Block::default().borders(Borders::ALL).title("Input"));
+        frame.render_widget(input, bottom_chunks[1]);
+    }
+}
+
+fn render_main_menu(frame: &mut Frame, area: Rect, app_state: &mut AppState) {
+    let items: Vec<ListItem> = app_state
+        .grammar_options
+        .iter()
+        .map(|opt| ListItem::new(Line::from(vec![Span::raw(opt.as_str())])))
+        .collect();
+
+    let list = List::new(items)
+        .block(Block::default().title("Grammars").borders(Borders::ALL))
+        .highlight_style(
+            Style::default()
+                .bg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol("> ");
+
+    frame.render_stateful_widget(list, area, &mut app_state.list_state);
+}
+
+fn render_new_grammar(frame: &mut Frame, area: Rect) {
+    let help_text = Paragraph::new("Enter path to .txt grammar file (ESC to cancel)");
+    frame.render_widget(help_text, area);
+}
+
+fn render_delete_grammar(frame: &mut Frame, area: Rect, app_state: &mut AppState) {
+    let items: Vec<ListItem> = app_state
+        .grammar_options
+        .iter()
+        .map(|opt| ListItem::new(Line::from(vec![Span::raw(opt.as_str())])))
+        .collect();
+
+    let list = List::new(items)
+        .block(
+            Block::default()
+                .title("Delete Grammar")
+                .borders(Borders::ALL),
+        )
+        .highlight_style(Style::default().bg(Color::Red).add_modifier(Modifier::BOLD))
+        .highlight_symbol("> ");
+
+    frame.render_stateful_widget(list, area, &mut app_state.list_state);
 }

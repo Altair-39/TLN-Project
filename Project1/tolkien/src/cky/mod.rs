@@ -6,28 +6,30 @@ use std::fs::File;
 use std::io::Write;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize)]
-
 pub struct ParseTreeNode {
     pub symbol: String,
     pub children: Vec<ParseTreeNode>,
 }
 
-pub fn cky_parse(sentence: &str, grammar: &Cfg, file_path: &str) -> bool {
+pub fn cky_parse(sentence: &str, grammar: &Cfg, file_path: &str) -> Option<ParseTreeNode> {
     let words: Vec<String> = sentence.split_whitespace().map(String::from).collect();
     let n = words.len();
 
     if n == 0 {
-        return false;
+        return None;
     }
+
+    let word_to_nt: Vec<HashSet<String>> = words
+        .iter()
+        .map(|word| grammar.get_non_terminals(&[word.clone()]))
+        .collect();
 
     let mut table: Vec<Vec<HashSet<ParseTreeNode>>> = vec![vec![HashSet::new(); n]; n];
 
     for (i, word) in words.iter().enumerate() {
-        let non_terminals = grammar.get_non_terminals(&[word.clone()]);
-
-        for nt in non_terminals {
+        for nt in &word_to_nt[i] {
             let leaf_node = ParseTreeNode {
-                symbol: nt,
+                symbol: nt.clone(),
                 children: vec![ParseTreeNode {
                     symbol: word.clone(),
                     children: vec![],
@@ -40,43 +42,45 @@ pub fn cky_parse(sentence: &str, grammar: &Cfg, file_path: &str) -> bool {
     for length in 2..=n {
         for i in 0..=n - length {
             let j = i + length - 1;
+
             for k in i..j {
-                let left_set = table[i][k].clone();
-                let right_set = table[k + 1][j].clone();
-                for left in &left_set {
-                    for right in &right_set {
-                        let possible_lhs =
-                            grammar.get_non_terminals(&[left.symbol.clone(), right.symbol.clone()]);
+                if table[i][k].is_empty() || table[k + 1][j].is_empty() {
+                    continue;
+                }
+
+                let mut new_nodes = Vec::new();
+
+                for left in &table[i][k] {
+                    for right in &table[k + 1][j] {
+                        let production = vec![left.symbol.clone(), right.symbol.clone()];
+                        let possible_lhs = grammar.get_non_terminals(&production);
+
                         for lhs in possible_lhs {
-                            let parent_node = ParseTreeNode {
+                            new_nodes.push(ParseTreeNode {
                                 symbol: lhs,
                                 children: vec![left.clone(), right.clone()],
-                            };
-                            table[i][j].insert(parent_node);
+                            });
                         }
                     }
+                }
+
+                for node in new_nodes {
+                    table[i][j].insert(node);
                 }
             }
         }
     }
 
-    let start_symbol = "S";
-    let contains_start = table[0][n - 1]
+    table[0][n - 1]
         .iter()
-        .any(|node| node.symbol == start_symbol);
-
-    if contains_start {
-        if let Some(parse_tree) = table[0][n - 1]
-            .iter()
-            .find(|node| node.symbol == start_symbol)
-        {
-            if let Ok(json) = to_string_pretty(parse_tree) {
-                let mut file = File::create(file_path).expect("Failed to create file");
-                file.write_all(json.as_bytes())
-                    .expect("Failed to write file");
+        .find(|node| node.symbol == "S")
+        .cloned()
+        .inspect(|parse_tree| {
+            if !file_path.is_empty() {
+                if let Ok(json) = to_string_pretty(parse_tree) {
+                    let _ = File::create(file_path)
+                        .and_then(|mut file| file.write_all(json.as_bytes()));
+                }
             }
-        }
-    }
-
-    contains_start
+        })
 }

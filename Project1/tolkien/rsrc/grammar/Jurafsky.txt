@@ -1,0 +1,29 @@
+S -> NP VP
+S -> X1 VP
+X1 -> Aux NP
+S -> book | include | prefer
+S -> Verb NP
+S -> X2 PP 
+S -> Verb PP 
+S -> VP PP 
+NP -> I | she | me 
+NP -> United | Houston
+NP -> Det Nominal
+NP -> Det Noun
+Nominal -> book | flight | meal | money | morning
+Nominal -> Nominal Noun
+Nominal -> Nominal PP 
+VP -> book | inlcude | prefer
+VP -> Verb NP
+VP -> X2 PP 
+X2 -> Verb NP 
+VP -> Verb PP 
+VP -> VP PP 
+PP -> Preposition NP
+
+Det -> the | that | this | a 
+Noun -> book | flight | meal | money | morning 
+verb -> book | include | prefer 
+Pronoun -> I | she | me
+Aux -> does | do
+Preposition -> from | to | on | near | through

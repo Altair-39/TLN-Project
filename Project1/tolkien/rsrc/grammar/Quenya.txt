@@ -1,0 +1,12 @@
+S -> NP VP
+S -> Pronverb Noun
+
+NP -> Det NP
+NP -> NP Noun 
+NP -> hesto | macil | aran | aiwi | eldar | atan | eldan | lumba | tecil
+
+Pronverb -> Nanye | Nalme
+
+Verb -> same | tira | antane
+
+Det -> I | i
