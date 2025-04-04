@@ -1,0 +1,17 @@
+[package]
+name = "gram"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+chrono = "0.4"
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+rand = "0.8"
+ratatui = "0.29.0"
+crossterm = "0.28.1"
+inquire = "0.7.5"
+# For random generation of words from n-grams
+
