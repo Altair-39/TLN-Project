@@ -34,20 +34,16 @@ struct AppState {
 #[derive(Debug, Clone, PartialEq)]
 enum Mode {
     MainMenu,
-    NewGrammar,
-    DeleteGrammar,
     ParseSentence(String),
 }
 
 fn main() -> io::Result<()> {
-    // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Initialize app state
     let grammar_dir = "rsrc/grammar";
     let grammar_options = get_grammar_options(grammar_dir)?;
     let mut app_state = AppState {
@@ -61,12 +57,10 @@ fn main() -> io::Result<()> {
         scroll_offset: 0,
     };
 
-    // Main loop
     let mut running = true;
     while running {
         terminal.draw(|f| ui(f, &mut app_state))?;
 
-        // Handle input
         if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key_event) = event::read()? {
                 let grammar_name = match &app_state.mode {
@@ -77,12 +71,6 @@ fn main() -> io::Result<()> {
                 match app_state.mode {
                     Mode::MainMenu => {
                         handle_main_menu(&mut app_state, key_event.code, &mut running, grammar_dir)?
-                    }
-                    Mode::NewGrammar => {
-                        handle_new_grammar(&mut app_state, key_event.code, grammar_dir)?
-                    }
-                    Mode::DeleteGrammar => {
-                        handle_delete_grammar(&mut app_state, key_event.code, grammar_dir)?
                     }
                     Mode::ParseSentence(_) => {
                         if let Some(name) = grammar_name {
@@ -98,7 +86,6 @@ fn main() -> io::Result<()> {
             }
         }
 
-        // Handle message timer
         if app_state.message_timer > 0 {
             app_state.message_timer -= 1;
             if app_state.message_timer == 0 {
@@ -107,7 +94,6 @@ fn main() -> io::Result<()> {
         }
     }
 
-    // Cleanup terminal
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),
@@ -145,14 +131,6 @@ fn handle_main_menu(
             if let Some(selected) = app_state.list_state.selected() {
                 let options_count = app_state.grammar_options.len();
                 match selected {
-                    x if x == options_count => {
-                        app_state.mode = Mode::NewGrammar;
-                        app_state.input.clear();
-                    }
-                    x if x == options_count + 1 => {
-                        app_state.mode = Mode::DeleteGrammar;
-                        app_state.list_state.select(Some(0));
-                    }
                     x if x == options_count + 2 => *running = false,
                     _ => {
                         let grammar_name = app_state.grammar_options[selected].clone();
@@ -163,91 +141,6 @@ fn handle_main_menu(
                         app_state.input.clear();
                         app_state.scroll_offset = 0;
                     }
-                }
-            }
-        }
-        _ => {}
-    }
-    Ok(())
-}
-
-fn handle_new_grammar(app_state: &mut AppState, key: KeyCode, grammar_dir: &str) -> io::Result<()> {
-    match key {
-        KeyCode::Enter => {
-            let path = app_state.input.trim();
-            if !path.ends_with(".txt") {
-                app_state.message = "Error: File must be a .txt".to_string();
-                app_state.message_timer = 10;
-            } else {
-                let dest = Path::new(grammar_dir).join(Path::new(path).file_name().unwrap());
-                match fs::copy(path, dest) {
-                    Ok(_) => {
-                        app_state.message = "Grammar added!".to_string();
-                        app_state.message_timer = 10;
-                        app_state.grammar_options = get_grammar_options(grammar_dir)?;
-                        app_state.mode = Mode::MainMenu;
-                    }
-                    Err(e) => {
-                        app_state.message = format!("Error: {}", e);
-                        app_state.message_timer = 10;
-                    }
-                }
-            }
-        }
-        KeyCode::Char(c) => {
-            app_state.input.push(c);
-        }
-        KeyCode::Backspace => {
-            app_state.input.pop();
-        }
-        KeyCode::Esc => {
-            app_state.mode = Mode::MainMenu;
-            app_state.input.clear();
-        }
-        _ => {}
-    }
-    Ok(())
-}
-
-fn handle_delete_grammar(
-    app_state: &mut AppState,
-    key: KeyCode,
-    grammar_dir: &str,
-) -> io::Result<()> {
-    match key {
-        KeyCode::Enter => {
-            if let Some(selected) = app_state.list_state.selected() {
-                let grammar_name = &app_state.grammar_options[selected];
-                let path = Path::new(grammar_dir).join(format!("{}.txt", grammar_name));
-                match fs::remove_file(path) {
-                    Ok(_) => {
-                        app_state.message = format!("Deleted '{}'", grammar_name);
-                        app_state.message_timer = 10;
-                        app_state.grammar_options = get_grammar_options(grammar_dir)?;
-                        app_state.list_state.select(Some(0));
-                        app_state.mode = Mode::MainMenu;
-                    }
-                    Err(e) => {
-                        app_state.message = format!("Error: {}", e);
-                        app_state.message_timer = 10;
-                    }
-                }
-            }
-        }
-        KeyCode::Esc => {
-            app_state.mode = Mode::MainMenu;
-        }
-        KeyCode::Up => {
-            if let Some(selected) = app_state.list_state.selected() {
-                if selected > 0 {
-                    app_state.list_state.select(Some(selected - 1));
-                }
-            }
-        }
-        KeyCode::Down => {
-            if let Some(selected) = app_state.list_state.selected() {
-                if selected < app_state.grammar_options.len() - 1 {
-                    app_state.list_state.select(Some(selected + 1));
                 }
             }
         }
@@ -321,10 +214,6 @@ fn get_grammar_options(grammar_dir: &str) -> io::Result<Vec<String>> {
         .collect();
 
     options.sort();
-    options.push("New".to_string());
-    options.push("Delete".to_string());
-    options.push("Quit".to_string());
-
     Ok(options)
 }
 
@@ -333,18 +222,16 @@ fn get_grammar_rules(grammar_name: &str, grammar_dir: &str) -> io::Result<String
 }
 
 fn ui(frame: &mut Frame, app_state: &mut AppState) {
-    // Main layout chunks
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
         .constraints([
-            Constraint::Length(3), // Title
-            Constraint::Min(5),    // Main content
-            Constraint::Length(4), // Bottom area
+            Constraint::Length(3),
+            Constraint::Min(5),
+            Constraint::Length(4),
         ])
         .split(frame.area());
 
-    // Title
     let title = Paragraph::new("Grammar Parser").block(
         Block::default()
             .borders(Borders::ALL)
@@ -352,22 +239,14 @@ fn ui(frame: &mut Frame, app_state: &mut AppState) {
     );
     frame.render_widget(title, main_chunks[0]);
 
-    // Content area - split between instruction and grammar rules
     let content_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3), // Instruction area
-            Constraint::Min(8),    // Scrollable grammar rules
-        ])
+        .constraints([Constraint::Length(3), Constraint::Min(8)])
         .split(main_chunks[1]);
 
-    // Render based on mode
     match app_state.mode.clone() {
         Mode::MainMenu => render_main_menu(frame, content_chunks[1], app_state),
-        Mode::NewGrammar => render_new_grammar(frame, content_chunks[0]),
-        Mode::DeleteGrammar => render_delete_grammar(frame, content_chunks[0], app_state),
         Mode::ParseSentence(grammar_name) => {
-            // Instruction
             let help_text = Paragraph::new(format!(
                 "Enter sentence to parse with '{}' (type 'Quit' to return)\n\
                 Use PageUp/PageDown to scroll grammar rules",
@@ -375,7 +254,6 @@ fn ui(frame: &mut Frame, app_state: &mut AppState) {
             ));
             frame.render_widget(help_text, content_chunks[0]);
 
-            // Grammar rules with scrolling
             let rules_block = Block::default()
                 .title("Grammar Rules")
                 .borders(Borders::ALL)
@@ -389,7 +267,6 @@ fn ui(frame: &mut Frame, app_state: &mut AppState) {
 
             frame.render_widget(rules, content_chunks[1]);
 
-            // Show scroll position indicator if needed
             if rules_text.height() > content_chunks[1].height as usize {
                 let scroll_info = Paragraph::new(format!(
                     "Scroll: {}/{}",
@@ -402,16 +279,11 @@ fn ui(frame: &mut Frame, app_state: &mut AppState) {
         }
     }
 
-    // Bottom area - split between message and input
     let bottom_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(1), // Message
-            Constraint::Length(3), // Input
-        ])
+        .constraints([Constraint::Length(1), Constraint::Length(3)])
         .split(main_chunks[2]);
 
-    // Always show message if it exists
     if !app_state.message.is_empty() {
         let message = Paragraph::new(app_state.message.as_str()).style(
             Style::default()
@@ -421,8 +293,7 @@ fn ui(frame: &mut Frame, app_state: &mut AppState) {
         frame.render_widget(message, bottom_chunks[0]);
     }
 
-    // Show input only in modes that need it
-    if matches!(app_state.mode, Mode::NewGrammar | Mode::ParseSentence(_)) {
+    if matches!(app_state.mode, Mode::ParseSentence(_)) {
         let input = Paragraph::new(app_state.input.as_str())
             .block(Block::default().borders(Borders::ALL).title("Input"));
         frame.render_widget(input, bottom_chunks[1]);
@@ -443,30 +314,6 @@ fn render_main_menu(frame: &mut Frame, area: Rect, app_state: &mut AppState) {
                 .bg(Color::DarkGray)
                 .add_modifier(Modifier::BOLD),
         )
-        .highlight_symbol("> ");
-
-    frame.render_stateful_widget(list, area, &mut app_state.list_state);
-}
-
-fn render_new_grammar(frame: &mut Frame, area: Rect) {
-    let help_text = Paragraph::new("Enter path to .txt grammar file (ESC to cancel)");
-    frame.render_widget(help_text, area);
-}
-
-fn render_delete_grammar(frame: &mut Frame, area: Rect, app_state: &mut AppState) {
-    let items: Vec<ListItem> = app_state
-        .grammar_options
-        .iter()
-        .map(|opt| ListItem::new(Line::from(vec![Span::raw(opt.as_str())])))
-        .collect();
-
-    let list = List::new(items)
-        .block(
-            Block::default()
-                .title("Delete Grammar")
-                .borders(Borders::ALL),
-        )
-        .highlight_style(Style::default().bg(Color::Red).add_modifier(Modifier::BOLD))
         .highlight_symbol("> ");
 
     frame.render_stateful_widget(list, area, &mut app_state.list_state);
