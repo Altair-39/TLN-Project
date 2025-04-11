@@ -1,5 +1,6 @@
-use rand::distributions::WeightedIndex;
-use rand::prelude::*;
+use rand::distr::weighted::WeightedIndex;
+use rand::distr::Distribution;
+use rand::rng;
 use std::collections::HashMap;
 
 use crate::apply_temperature;
@@ -24,7 +25,7 @@ pub fn generate_bigrams_text(
     length: usize,
     temperature: f64,
 ) -> String {
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let mut result = vec![start_word.to_string()];
     let mut current_word = start_word.to_string();
 
