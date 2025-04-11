@@ -21,9 +21,6 @@ fn main() {
 
     let tokens = tokenize(&text_content);
 
-    let bigrams = generate_bigrams(tokens.clone());
-    let trigrams = generate_trigrams(tokens);
-
     let generation_type = get_generation_type();
 
     let temperature = get_temperature();
@@ -33,8 +30,10 @@ fn main() {
     let length = get_length();
 
     let generated_text = if generation_type == "Bigrams" {
+        let bigrams = generate_bigrams(tokens.clone());
         generate_bigrams_text(&bigrams, &start_input, length, temperature)
     } else {
+        let trigrams = generate_trigrams(tokens);
         generate_trigram_text(&trigrams, &start_input, length, temperature)
     };
 
