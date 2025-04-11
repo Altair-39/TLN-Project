@@ -2,6 +2,10 @@
 
 **/*.xml
 
+# txt
+
+**/*.txt
+
 # LaTeX
 
 **/*.aux
