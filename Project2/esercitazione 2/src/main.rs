@@ -143,7 +143,7 @@ fn generate_trigram_text(
 }
 
 fn read_moby_dick() -> String {
-    let file_path = "moby-dick.txt";
+    let file_path = "rsrc/moby-dick.txt";
     fs::read_to_string(file_path).expect("Unable to read Moby Dick file")
 }
 
