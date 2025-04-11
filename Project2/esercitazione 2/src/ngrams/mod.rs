@@ -1,2 +1,2 @@
-mod bigrams;
-mod trigrams;
+pub mod bigrams;
+pub mod trigrams;
