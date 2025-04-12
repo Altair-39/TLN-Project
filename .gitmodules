@@ -1,0 +1,9 @@
+[submodule "Project1"]
+	path = Project1
+	url = https://github.com/Altair-39/TLN-Project1
+[submodule "Project2"]
+	path = Project2
+	url = https://github.com/Altair-39/TLN-Project2
+[submodule "Project3"]
+	path = Project3
+	url = https://github.com/Altair-39/TLN-Project3
