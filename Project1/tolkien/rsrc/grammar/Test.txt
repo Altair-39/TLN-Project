@@ -1,7 +1,0 @@
-S -> NP VP
-VP -> VP ADV
-VP -> V NP
-
-NP -> Paolo | Francesca
-V -> ama
-ADV -> dolcemente
