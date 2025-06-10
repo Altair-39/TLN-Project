@@ -1,13 +1,15 @@
 \contentsline {chapter}{\numberline {1}Word Sense Disambiguation on SemCor}{2}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Algoritmo di Lesk}{2}{section.1.1}%
-\contentsline {subsection}{\numberline {1.1.1}API di WordNet}{2}{subsection.1.1.1}%
-\contentsline {section}{\numberline {1.2}SemCor}{2}{section.1.2}%
-\contentsline {subsection}{\numberline {1.2.1}Risultati}{2}{subsection.1.2.1}%
-\contentsline {chapter}{\numberline {2}Modeling social and literary language with N-grams}{3}{chapter.2}%
-\contentsline {section}{\numberline {2.1}Bigrams}{3}{section.2.1}%
-\contentsline {subsection}{\numberline {2.1.1}Letteratura}{3}{subsection.2.1.1}%
-\contentsline {subsection}{\numberline {2.1.2}Twitter}{3}{subsection.2.1.2}%
-\contentsline {section}{\numberline {2.2}Trigrams}{3}{section.2.2}%
-\contentsline {subsection}{\numberline {2.2.1}Letteratura}{3}{subsection.2.2.1}%
-\contentsline {subsection}{\numberline {2.2.2}Twitter}{3}{subsection.2.2.2}%
+\contentsline {subsection}{\numberline {1.1.1}API di WordNet}{3}{subsection.1.1.1}%
+\contentsline {section}{\numberline {1.2}SemCor}{3}{section.1.2}%
+\contentsline {paragraph}{I file avevano la seguente struttura:}{3}{section*.3}%
+\contentsline {paragraph}{I valori considerati sono stati:}{3}{section*.4}%
+\contentsline {subsection}{\numberline {1.2.1}Risultati}{4}{subsection.1.2.1}%
+\contentsline {chapter}{\numberline {2}Modeling Social and Literary Language with N-grams}{5}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Bi-grams}{5}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}Letteratura}{6}{subsection.2.1.1}%
+\contentsline {subsection}{\numberline {2.1.2}Twitter}{6}{subsection.2.1.2}%
+\contentsline {section}{\numberline {2.2}Tri-grams}{6}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Letteratura}{8}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Twitter}{8}{subsection.2.2.2}%
 \contentsfinish 

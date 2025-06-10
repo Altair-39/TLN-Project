@@ -1,12 +1,120 @@
 \chapter{Word Sense Disambiguation on SemCor}
 
+Il \textbf{Word Sense Disambiguation} (WSD) è il task che consiste nell'identificazione di quale senso di una determinata parola sia inteso in una frase o in un contesto. 
+
 \section{Algoritmo di Lesk}
+
+L'\textbf{algoritmo di Lesk} è uno dei più semplici approcci al WSD task. Si base sulla premessa che parole utilizzate in un determinato contesto probabilmente hanno un senso comune L'algoritmo compara le definizioni della parola che si vuole disambiguare con le parole circostanti in modo da trovare il senso più appropriato. Per questa esercitazione si è scelto di implementatare una versione semplificata dell'algoritmo di Leskin cui il significato di ogni parola è determinato dal senso che ha il maggior overlapping tra la definizione (utilizzando un \textit{thesaurus}, in questo caso \textbf{WordNet}) e il suo contesto. Questo approccio considerà ogni parola individualmente indipendentemente dai sensi delle altre parole nel contesto. Tuttavia l'algoritmo di Lesk ha il difetto di dipendere dalla definzione esatta della parola, per cui l'assenza di determinate parole può cambiarne completamente il risultato.
+
+\begin{lstlisting}[language=cpp, caption = Versione semplificata dell'algoritmo di Lesk]
+SynsetPtr simple_lesk(semcor_word word, semcor_phrase context) {
+  int pos = semcor_to_wordnet_pos(word.get_pos());
+  if (pos == -1)
+    return nullptr;
+
+  string search_word =
+      word.get_lemma().empty() ? word.get_text() : word.get_lemma();
+
+  SynsetPtr synset = get_synset(search_word, pos);
+  if (!synset)
+    return nullptr;
+
+  SynsetPtr best_sense = synset;
+  int max_overlap = 0;
+
+  SynsetPtr current = synset;
+  while (current) {
+    string signature;
+    if (current->defn)
+      signature += string(current->defn);
+    int overlap = compute_overlap(signature, context);
+
+    if (overlap > max_overlap) {
+      max_overlap = overlap;
+      best_sense = current;
+    }
+
+    current = current->nextss;
+  }
+
+  return best_sense;
+}\end{lstlisting}
 
 \subsection{API di WordNet}
 
+Come detto nella sezione precedente si è scelto di utilizzare WordNet come thesaurus. In questa sezione sono elencate le specifiche API C utilizzate:
+
+\begin{itemize}
+  \item \texttt{findtheinfo\_ds}: restituisce il risultato come una linked list. 
+  \item \texttt{free\_syns}: libera la memoria allocata da \texttt{findtheinfo\_ds}.
+  \item \texttt{wninit}: per aprire il database.
+\end{itemize}
+
 \section{SemCor}
+
+Per testare l'algoritmo si è usato il corpus \textit{SemCor}. Il parsing dei file xml è stato fatto mediante la libreria \texttt{pugixml}. 
+
+\paragraph{I file avevano la seguente struttura:}
+
+\begin{itemize}
+  \item $<p>$ 
+    \begin{itemize}
+      \item $<s>$ 
+        \begin{itemize}
+          \item $wf$
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+\paragraph{I valori considerati sono stati:}
+
+\begin{itemize}
+  \item pos: il pos tag della parola. 
+  \item cmd: valore booleano che indica se la parola abbia un senso (e.g. le stopwork non lo hanno). 
+  \item lemma: il lemma della parola. 
+  \item wnsn: la chiave del senso della parola in WordNet.
+\end{itemize}
+
+\begin{lstlisting}[language=cpp, caption= Validazione della predizione dell'algoritmo di Lesk tramite confronto con gold sense.]
+int gold_num = stoi(gold_key);
+int current_num = 1;
+
+SynsetPtr curr_sense = get_synset(predicted->words[0], pos);
+SynsetPtr full_list = curr_sense;
+SynsetPtr gold_sense = nullptr;
+
+while (curr_sense) {
+  if (current_num == gold_num) {
+    gold_sense = curr_sense;
+    break;
+  }
+curr_sense = curr_sense->nextss;
+current_num++;
+}
+\end{lstlisting}
 
 \subsection{Risultati}
 
+Il programma è stato eseguito 10 volte e ogni volta si è andati a disambiguare una parola per frase (50 frasi per esecuzione). La media dell'accuratezza è intorno al 60\% che è sensato come risultato considerando che il WSD è un task \textit{difficile} e che l'algoritmo di Lesk è molto semplice.
 
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Numero Esecuzione} & \textbf{Accuratezza (\%)} \\
+\hline
+1 & 62 \\
+2 & 58 \\
+3 & 50 \\
+4 & 72 \\
+5 & 54 \\
+6 & 50 \\
+7 & 68 \\
+8 & 52 \\
+9 & 64 \\
+10 & 70 \\
+\hline
+\end{tabular}
+\caption{Accuratezza per ciascuna esecuzione}
+\end{table}
 

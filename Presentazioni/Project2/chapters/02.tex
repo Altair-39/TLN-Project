@@ -1,14 +1,170 @@
-\chapter{Modeling social and literary language with N-grams}
+\chapter{Modeling Social and Literary Language with N-grams}
 
-\section{Bigrams}
+Un \textit{n-gram} è una sequenza di $n$ simboli adiacenti in un determinato ordine. In particolare in questa esercitazione ci si è concentrati su n-grams di parole:
+\begin{itemize}
+  \item \textbf{Bi-grams:} formati da 2 parole. 
+  \item \textbf{Tri-grams:} formati da 3 parole.
+\end{itemize}
+
+Inoltre si è scelto, per rendere le cose più interessanti, di implementare un rudimentale modello di \textbf{temperatura}. La temperatura è un parametro per "controllare" la \textit{randomness} di un modello: una temperatura più bassa rende il modello più conservativo, una temperatura più alta lo rende più creativo.
+
+\section{Bi-grams}
+
+Per estrarre i Bi-grams da un input si è utilizzata una \textit{finestra} di due parole che scorrendo genera un HashMap la cui chiave è la prima parola e la cui entry è a sua volta una HashMap in cui vengono contate le occorrenze di quella coppia di parole.
+
+\begin{lstlisting}[language=rust, caption = Estrazione dei bi-grams]
+pub fn generate_bigrams(tokens: Vec<String>) -> HashMap<String, HashMap<String, usize>> {
+    let mut bigrams: HashMap<String, HashMap<String, usize>> = HashMap::new();
+
+    for window in tokens.windows(2) {
+        if let [word1, word2] = window {
+            let entry = bigrams.entry(word1.clone()).or_default();
+            *entry.entry(word2.clone()).or_insert(0) += 1;
+        }
+    }
+
+    bigrams
+}
+\end{lstlisting}
+
+Dopo che i bi-grams sono stati estratti si può generare il testo. Per generare del testo utilizzando i bi-grams è necessario fornire una parola iniziale, la lunghezza del testo che si vuole generare e un valore per la temperatura. La funzione utilizza un ciclo per generare le parole successive:
+
+\begin{enumerate}
+  \item Per prima cosa colleziona tutte le possibili parole successive. 
+  \item Poi applica la temperatura a ogni parola raccolta creando dei \textbf{pesi}. 
+  \item La parola viene generata casualmente. Ovviamente questo è influenzato dalla probabilità che una parola segua un'altra (e.g. una parola con probabilità del 90\% avrà più probabilità di essere scelta rispetto a una con solo 5\%).
+\end{enumerate}
+
+\begin{lstlisting}[language=rust, caption = Generazione dei bi-grams]
+pub fn generate_bigrams_text(
+    bigrams: &HashMap<String, HashMap<String, usize>>,
+    start_word: &str,
+    length: usize,
+    temperature: f64,
+) -> String {
+    let mut rng = rng();
+    let mut result = vec![start_word.to_string()];
+    let mut current_word = start_word.to_string();
+
+    for _ in 0..length - 1 {
+        if let Some(next_words_map) = bigrams.get(&current_word) {
+            let words: Vec<_> = next_words_map.keys().cloned().collect();
+            let weights: Vec<f64> = apply_temperature(next_words_map, temperature);
+            let dist = WeightedIndex::new(&weights).unwrap();
+            let next_word = words[dist.sample(&mut rng)].clone();
+            result.push(next_word.clone());
+            current_word = next_word;
+        } else {
+            break;
+        }
+    }
+
+    format_text(&result)
+}\end{lstlisting}
 
 \subsection{Letteratura}
+
+Utilizzando il testo di Moby dick si sono trovati i seguenti risultati. 
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|c|c|p{8cm}|}
+\hline
+\textbf{Input} & \textbf{Temperatura} & \textbf{Lunghezza} & \textbf{Testo} \\
+\hline
+whale & 0.5 & 30 & whale, and if you, and the first time. but the old man, and in it, the whale, and all the whale. \\
+\hline
+whale & 1.0 & 30 & whale. they hint to the clear from all heeding what a sea; iron in china from the body was cast loose - fish yet his strength, you \\
+\hline
+whale & 1.5 & 30 & whale thus trampled with halting, the night going further,” muttered ahab gives very heedfully as upon a laugh out for unless the chap with yourself to such \\
+\hline
+\end{tabular}
+\caption{Testo generato dai bi-grams per diversi valori di temperatura con input "whale".}
+\end{table}
 
 \subsection{Twitter}
 
-\section{Trigrams}
+\section{Tri-grams}
+
+Per estrarre i Bi-grams da un input si è utilizzata una \textit{finestra} di due parole che scorrendo genera un HashMap. Di per sé il procedimento è lo stesso utilizzato per i bi-grams, ma questa volta la chiave sono due parole invece che una.
+
+\begin{lstlisting}[language=rust, caption = Estrazione dei tri-grams]
+pub fn generate_trigrams(tokens: Vec<String>) -> HashMap<String, HashMap<String, usize>> {
+    let mut trigrams: HashMap<String, HashMap<String, usize>> = HashMap::new();
+
+    for window in tokens.windows(3) {
+        if let [word1, word2, word3] = window {
+            let key = format!("{} {}", word1, word2);
+            let entry = trigrams.entry(key).or_default();
+            *entry.entry(word3.clone()).or_insert(0) += 1;
+        }
+    }
+
+    trigrams
+}
+
+\end{lstlisting}
+
+Dopo che i tri-grams sono stati estratti si può generare il testo. Per generare del testo utilizzando i tri-grams è necessario fornire una coppia di parole iniziale, la lunghezza del testo che si vuole generare e un valore per la temperatura. La funzione utilizza lo stesso procedimento utilizzato per i bi-grams per generare parole successive. 
+
+\begin{lstlisting}[language=rust, caption = Generazione dei tri-grams]
+pub fn generate_trigram_text(
+    trigrams: &HashMap<String, HashMap<String, usize>>,
+    start_phrase: &str,
+    length: usize,
+    temperature: f64,
+) -> String {
+    let mut rng = rng();
+    let mut result = vec![start_phrase.to_string()];
+    let mut current_phrase = start_phrase.to_string();
+
+    for _ in 0..length - 1 {
+        if let Some(next_words_map) = trigrams.get(&current_phrase) {
+            let words: Vec<_> = next_words_map.keys().cloned().collect();
+            let weights: Vec<f64> = apply_temperature(next_words_map, temperature);
+            let dist = WeightedIndex::new(&weights).unwrap();
+            let next_word = words[dist.sample(&mut rng)].clone();
+            result.push(next_word.clone());
+
+            current_phrase = format!(
+                "{} {}",
+                current_phrase
+                    .split_whitespace()
+                    .skip(1)
+                    .collect::<Vec<&str>>()
+                    .join(" "),
+                next_word
+            );
+        } else {
+            break;
+        }
+    }
+
+    format_text(&result)
+  }
+
+\end{lstlisting}
 
 \subsection{Letteratura}
+
+Utilizzando il testo di Moby Dick si sono trovati i seguenti risultati. 
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|c|c|p{8cm}|}
+\hline
+\textbf{Input} & \textbf{Temperatura} & \textbf{Lunghezza} & \textbf{Testo} \\
+\hline
+call me & 0.5 & 25 & call me ishmael. tell’ em. they were placed in the fishery, yet will i thee, thou grinning whale!” cried \\
+\hline
+call me & 1.0 & 25 & all me a dismal gloom, now wildly elbowed, fifty years ago. poor lazarus there, ahoy! have a purse!” screamed \\
+\hline
+call me & 1.5 & 25 & call me an immortal by brevet. yes, yes, it seems to be served. they look.” whereupon planting his feet, \\
+\hline
+\end{tabular}
+\caption{Testo generato dai tri-grams per diversi valori di temperatura con input "call me".}
+\end{table}
+
 
 \subsection{Twitter}
 
