@@ -1,0 +1,17 @@
+\chapter{WordNet to ConceptNet Mapping}
+
+L'idea alla base di quest'esercitazione è: creare un collegamento tra WordNet (che è un database lessicale contente relazioni semantiche\footnote{Sinonimia, iperonimia, iponimia, etc}) con ConceptNet (un database di \textit{common knowledge}). Unendo entrambe le risorse se ne può creare una nuova in grado di massimizzare i punti di forza di entrambe, per esempio si può migliorare l'accuratezza di task come la word sense disambiguation (WSD) migliorando l'accuratezza di algoritmi come quello di Lesk.
+
+\begin{lstlisting}[caption = The new resource obtain from the combination of WordNet and ConceptNet]
+return {
+  "synsets": [
+    {
+      "name": syn.name(),
+      "definition": syn.definition(),
+    }
+    for syn in synsets
+  ],
+  "relations": relations
+}
+
+\end{lstlisting}

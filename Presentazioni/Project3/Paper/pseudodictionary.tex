@@ -32,7 +32,7 @@ Consider a word $x \in L_1$ with $N$ senses and its translation $y \in L_2$ with
 \begin{itemize}
   \item Let $\mathcal{S}_x$ be the set of senses of $x$ in $L_1$
   \item Let $\mathcal{S}_y$ be the set of senses of $y$ in $L_2$
-  \item The senses of the pseudoword $x \cdot y$ are $\mathcal{S}_{x \cdot y} = \mathcal{S}_x \cap \mathcal{S}_y$
+  \item The senses of the pseudoword $x-y$ are $\mathcal{S}_{x-y} = \mathcal{S}_x \cap \mathcal{S}_y$
 \end{itemize}
 
 \[
@@ -41,7 +41,7 @@ Consider a word $x \in L_1$ with $N$ senses and its translation $y \in L_2$ with
 
 In particular, it frequently holds that:
 \[
-|\mathcal{S}_{x \cdot y}| \ll |\mathcal{S}_x| \quad \text{and} \quad |\mathcal{S}_{x \cdot y}| \ll |\mathcal{S}_y|
+|\mathcal{S}_{x-y}| \ll |\mathcal{S}_x| \quad \text{and} \quad |\mathcal{S}_{x-y}| \ll |\mathcal{S}_y|
 \]
 
 \subsection{Ambiguity Reduction Score (ARS)}
@@ -52,8 +52,7 @@ A simple approach to measure the reduction of ambiguity of a pseudoword $x-y$ is
   \text{AmbiguityReduction}(x, y) = \frac{|\mathcal{S}_x| + |\mathcal{S}_y| - 2 \cdot |\mathcal{S}_x \cap \mathcal{S}_y|}{|\mathcal{S}_x| + |\mathcal{S}_y|}
 \]
 
-where $|\mathcal{S}_x|$ is the set of sense in $x$, $|\mathcal{S}_y|$ is the set of sense in $y$ and $|\mathcal{S}_{x-y}$ is the set of common sense between $x$ and $y$. Taking a step further we can generalize the formula to take $N$ languages: 
-
+where $|\mathcal{S}_x|$ is the set of senses in $x$, $|\mathcal{S}_y|$ is the set of senses in $y$ and $|\mathcal{S}_{x-y}|$ is the set of common senses between $x$ and $y$. Taking a step further we can generalize the formula to take $N$ languages: 
 
 \[
   \text{AmbiguityReduction} = \frac{\sum_{i=1}^N |\mathcal{S}_i| - N \cdot \left|\bigcap_{i=1}^N \mathcal{S}_i\right|}{\sum_{i=1}^N |\mathcal{S}_i|}

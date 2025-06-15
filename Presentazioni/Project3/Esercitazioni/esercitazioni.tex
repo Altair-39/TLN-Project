@@ -1,0 +1,67 @@
+\documentclass[twoside]{report}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{enviroment/preamble.sty}
+\input{enviroment/macros.sty}
+\input{enviroment/letterfonts.sty}
+\input{enviroment/titlepage.sty}
+\input{enviroment/toc.sty}
+\usepackage{fancyhdr}
+\usepackage{pgfornament}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\RequirePackage[times]{quotchap}
+\graphicspath{{images/}}
+\def\layout{2}  
+\pagestyle{fancy}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+%---------------------------------------
+
+\maketitle
+\newpage
+\afterpage{\blankpage}
+
+\definecolor{codebg}{RGB}{248,248,248}
+
+\lstset{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  frame=single,
+  language=Python,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  showstringspaces=false,
+  breaklines=true
+}
+%---------------------------------------
+
+\pagenumbering{Roman}
+\tableofcontents
+\cleardoublepage\pagenumbering{arabic}
+\setPageStyle{2}
+\afterpage{\blankpage}
+
+%---------------------------------------
+
+\definecolor{chaptergrey}{rgb}{0.7,0,0}
+
+\include{chapters/01}
+
+%---------------------------------------
+
+\definecolor{chaptergrey}{rgb}{0,0.7,0}
+
+\include{chapters/02}
+
+%---------------------------------------
+
+\definecolor{chaptergrey}{rgb}{0,0,0.7}
+
+\include{chapters/03}
+
+%---------------------------------------
+
+%\bibliographystyle{unsrt}
+%\bibliography{bibl/bibl}
+
+\end{document}

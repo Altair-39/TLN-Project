@@ -1,0 +1,126 @@
+\chapter{Definitions}
+
+\section{Definition Complexity}
+
+L'obiettivo di quest'esercitazione è quello di far ragionare su quanto sia difficile creare delle definizioni che siano univoche e condivise. Per far ciò sono state scelte 4 parole e per ciascuna di esse diverse persone hanno fornito delle definizioni:
+
+\begin{itemize}
+  \item Concetti concreti:
+    \begin{itemize}
+      \item Generico: \textit{pantalone}. 
+      \item Specifico: \textit{microscopio}. 
+    \end{itemize}
+  \item Concetti astratti:
+    \begin{itemize}
+      \item Generico: \textit{pericolo}. 
+      \item Specifico: \textit{euristica}.
+    \end{itemize}
+\end{itemize}
+
+\paragraph{Passi preliminari:}
+
+\begin{itemize}
+  \item Le definizioni sono state tradotte in inglese: questo perché così facendo è possibile utilizzare WordNet (questo riguarda la prossima esercitazione \textit{content to form}). 
+  \item Le definizioni sono state lemmatizzate, tokenizzate e sono state rimosse le stopwords.
+\end{itemize}
+
+\subsection{SimLex}
+
+Per valutare la similarità lessicale si sono contati i termini in comune tra le definizioni prese a due a due e si è fatta la media.
+
+\begin{table}[ht]
+\centering
+\caption{Similarità Lessicale.}
+\begin{tabular}{|l|c|}
+\hline
+Termine & Similarità Lessicale \\
+\hline
+Pantalone & 0.1950 \\ 
+\hline
+Microscopio & 0.1519 \\ 
+\hline
+Pericolo & 0.1185\\
+\hline
+Euristica & 0.2276\\ 
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Considerazioni:} 
+
+\begin{itemize}
+  \item Concreto/Astratto:
+    \begin{itemize}
+      \item \textit{Pantalone-Pericolo:} le parole scelte per definire pantalone risultano più condivise rispetto a quelle scelte per rappresentare pericolo.
+      \item \textit{Microscopio-Euristica:} in questo caso è euristica ad avere una maggiore condivisione lessicale rispetto a microscopio. Questo può essere spiegato dal fatto che le definizioni sono state date da persone iscritte allo stesso corso di laurea magistrale in informatica e che quindi tendono a utilizzare gli stessi termini.
+    \end{itemize}
+  \item Generico/Specifico:
+    \begin{itemize}
+      \item \textit{Pantalone-Microscopio:} le definizioni di microscopio hanno meno termini in comune rispetto a pantalone. Ciò può essere dovuto anche alla lunghezza delle definizioni: più una definizione è lunga più è probabile trovare termini che differiscono da un'altra. 
+      \item \textit{Pericolo-Euristica:} poiché pericolo è un termine molto vago ci possono essere molti modi diversi per descriverlo mentre per quanto riguarda euristica meno.
+    \end{itemize}
+\end{itemize}
+
+\subsection{SimSem}
+
+Per valutare la similarità semantica si sono utilizzati degli embeddings e si è calcolata la \textit{cosine similarity} a due a due tra i vettori così ottenuti. Infine, come per la similarità lessicale, si è fatta la media.
+
+\begin{table}[ht]
+\centering
+\caption{Similarità Semantica.}
+\begin{tabular}{|l|c|}
+\hline
+Termine & Similarità Semantica \\
+\hline
+Pantalone & 0.6093 \\ 
+\hline
+Microscopio & 0.4734 \\ 
+\hline
+Pericolo & 0.4783\\
+\hline
+Euristica & 0.0350\\ 
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Considerazioni:} 
+
+\begin{itemize}
+  \item Concreto/Astratto:
+    \begin{itemize}
+      \item \textit{Pantalone-Pericolo:} entrambi i valori sono relativamente alti, entrambi i termini, pur essendo generici, sono ampliamente conosciuti. 
+      \item \textit{Microscopio-Euristica:} microscopio ha un valore molto più alto di euristica perché tende a essere qualcosa di cui si ha in testa il concetto in modo preciso. Sebbene anche euristica sia specifico e comunque difficile da concepire esattamente data la sua natura astratta.
+    \end{itemize}
+  \item Generico/Specifico:
+    \begin{itemize}
+      \item \textit{Pantalone-Microscopio:} microscopio essendo meno comune ha registrato una similarità lessicale minore, nonostante fosse probabile il contrario. 
+      \item \textit{Pericolo-Euristica:} a livello semantico le definizioni di euristica hanno un valore incredibilmente basso. Ciò è dovuto al fatto che è un termine difficile da definire con precisione, mentre la sensazione di pericolo è qualcosa di più condivisibile e conosciuto, per cui è più facile condividerne il significato.  
+    \end{itemize}
+\end{itemize}
+
+\section{Content to Form}
+
+I dizionari consentono la ricerca partendo dal termine per trovare la definizione. Una possibile alternativa è fare una \textit{ricerca onomasiologica}, ossia dalla significato si vuole trovare la parola corrispondente. In quest'esercitazione si utilizzano le definizioni utilizzate nella definizione precedente per testare questa ricerca. Per fare ciò si utilizzano gli iperonimi e il principio del genus. Il mio approccio è quello di prendere come genus la prima parola (escluse stopwords) basandomi sull'intuizione che una buona definizione parta sempre con la categoria generale. Un approccio alternativo potrebbe essere quello di contare la frequenza delle parole e prendere come genus le parole più frequentemente usate nelle definizioni.
+
+
+\begin{table}[ht]
+\centering
+\caption{Risultati della ricerca onomasiologica.}
+\begin{tabular}{|l|c|}
+\hline
+Termine & Definizioni Indovinate \\
+\hline
+Pantalone & 35/40 \\ 
+\hline
+Microscopio & 22/39 \\ 
+\hline
+Pericolo & 9/38 \\
+\hline
+Euristica & 4/36 \\ 
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Considerazioni:} questi risultati indicano che la mia scelta del genus risulta più o meno efficacie per le definizioni concrete (per esempio in pantalone molte definizioni iniziano con "indumento"), mentre se si passa a definizioni astratte la ricerca fallisce più spesso. Ciò potrebbe essere migliorato utilizzando l'approccio basato sulla frequenza descritto sopra.
+
+
