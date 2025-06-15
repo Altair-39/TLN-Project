@@ -101,12 +101,14 @@ A key challenge in this approach is selecting optimal translations. A potential 
 \item Select the pairing that maximizes the ARS (tab. \ref{tab1}).
 \end{itemize}
 
+The major advantage of this selection process is that it produces the \textit{least ambiguous pseudoword} possible from the combination $L_1$–$L_2$. This in turn enables the possibility of comparisons across other pseudowords in different language pairs (e.g., $L_1$–$L_3$, $L_1$–$L_4$, etc.) with uniformly reduced ambiguity.
 
-\begin{table}
+\begin{table}[ht]
+\centering
 \caption{Example with some translation (EN-IT). The pseudoword Room-Camera is better than the pseudoword Room-Chamber.}\label{tab1}
 \begin{tabular}{|l|l|l|c|}
 \hline
-Word $L_1$ & Translation $L_2$ & Common Senses & Ambiguity Reduction Score \\
+Word $L_1$ & Translation $L_2$ & Common Senses & ARS \\
 \hline
 Room & Camera & 
 \begin{tabular}[t]{@{}l@{}}
@@ -123,7 +125,7 @@ Bedroom \\
 Room \\
 Legislative chamber \\
 Chambers (law) \\
-Chamber (Architecture) \\
+Room (Architecture) \\
 The Chamber (Song) \\
 The Chamber (1996)
 \end{tabular} & 0.176 \\
@@ -131,35 +133,70 @@ The Chamber (1996)
 \end{tabular}
 \end{table}
 
-\section{Result}
+This is only one of the possible approach:
 
-\begin{figure}[!h]
-    \centering
-    \includegraphics[scale=0.45]{ambiguity_reduction_plot_IT_DE.png}
-    \caption{Ambiguity Reduction Score for IT-DE.}
-\end{figure}
+\begin{itemize}
+  \item \textbf{Backward-Translation}: 
+    \begin{itemize}
+      \item Translate the source word $x \in L_1$ into the target language $L_2$, yielding a candidate translation $t_x \in L_2$.
+      \item Then, translate $t_x$ back from $L_2$ into the source language $L_1$, obtaining $y \in L_1$.
+      \item If the back-translated word $y$ matches the original word $x$ (i.e., $x = y$), then $t_x$ is considered a valid translation and can be selected.
+      \item If no candidate satisfies this condition, or if multiple candidates yield the same back-translation, fall back to an alternative selection strategy.
+    \end{itemize}
+  \item \textbf{Combining Multiple Technique}: as show by Hyun Lee, Juntae Yoon and Gil-Chang Kim \cite{Translation2003}, it is possible to combine different measures:
+
+\begin{itemize}
+  \item \textbf{Sense preference:} leverages example sentences and glosses from a bilingual dictionary to identify the most probable sense of a word in context.
+
+  \item \textbf{Sense probability:} Uses bilingual dictionaries to map each source sense to a distinct set of target words. These clusters are typically semantically coherent. By selecting the cluster with the highest contextual fit (via co-occurrence statistics), we reduce the chance of including semantically divergent or spurious translations.
+
+  \item \textbf{Word probability:} Once a sense is selected, target words within the same sense cluster are ranked by their naturalness in context, measured via co-occurrence frequency in a corpus. This ensures the final translation minimizes lexical ambiguity and aligns with native usage.
+\end{itemize}
+\end{itemize}
+
+\section{Experiments and Results}
+
+The method was tested using selected words\footnote{For computational simplicity, the problem of selecting the optimal translation was omitted, and only the most common translations were considered.} in Italian ($L_1$), English ($L_2$), and German ($L_3$). As shown in Figure \ref{fig:1}, pseudowords like \textit{pesca-pfirsich} and \textit{flower-blume} achieve a higher ARS than their counterparts in Figure \ref{fig:2}. However, certain pseudowords in Figure \ref{fig:2}, such as \textit{testa-head}, demonstrate a higher ARS than their alternatives.
 
 \begin{figure}[!h]
     \centering
     \includegraphics[scale=0.45]{ambiguity_reduction_plot_IT_EN.png}
     \caption{Ambiguity Reduction Score for IT-EN.}
+    \label{fig:1}
 \end{figure}
+\begin{figure}[!h]
+    \centering
+    \includegraphics[scale=0.45]{ambiguity_reduction_plot_IT_DE.png}
+    \caption{Ambiguity Reduction Score for IT-DE.}
+    \label{fig:2}
+\end{figure}
+
 
 \subsection{Limitations}
 
-A significant limitation of this approach stems from the scarcity of comprehensive multilingual semantic resources. Even when using BabelNet, one of the most extensive multilingual encyclopedias, several challenges persist:
+A significant limitation of this approach stems from the scarcity of comprehensive multilingual semantic resources. Even when using BabelNet \cite{BabelNet2012}, one of the most extensive multilingual encyclopedias, several challenges persist:
 
 \begin{itemize}
-\item \textbf{Asymmetrical sense alignment}: Semantic mappings often work in only one direction (e.g., Italian $\rightarrow$ English but not English $\rightarrow$ Italian).
+\item \textbf{Asymmetrical sense alignment}: Semantic mappings frequently operate unidirectionally (e.g., Italian $\rightarrow$ English mappings differ from English $\rightarrow$ Italian). This is demonstrated when querying with EN as \texttt{searchLang} and IT as \texttt{targetLang} produces different results than the reverse configuration.
+\item \textbf{Sense noise from multiple sources}: BabelNet aggregates senses from diverse resources (e.g., WordNet, Wikipedia, OmegaWiki), resulting in redundancy. For instance, the word \textit{apple} has overlapping but differently phrased senses like "Fruit with red or yellow or green skin..." (WordNet) and "An apple is a round, edible fruit..." (Wikipedia). To reduce this noise, I restricted sense extraction to a single source (Wikipedia), improving consistency but at the cost of potentially losing valid senses from other sources.
 \item \textbf{Incomplete coverage}: Many words lack proper cross-lingual sense mappings.
-\item \textbf{Under-representation}: the languages less used have little representation.
+\item \textbf{Under-representation}: Low-resource languages are poorly represented in semantic networks, limiting the quality and size of pseudodictionaries involving those languages.
 \end{itemize}
 
 
 \section{Future Prospect}
 
-
+\begin{itemize}
+\item \textbf{Multilingual Scaling}: If a word $x \in L_1$ is combined with a word $y \in L_2$, the resulting pseudoword $x-y$ is less ambiguous than the original words. Naturally, adding a word $z \in L_3$ would further reduce ambiguity (as demonstrated by the generalized ARS formula). The key challenge lies in identifying the optimal combination of languages that maximizes the ARS, thereby achieving the greatest ambiguity reduction.
+  \item \textbf{Pseudodictionary as a Semantic Benchmark}: The constructed pseudodictionary could be evaluated as a benchmark for word sense disambiguation (WSD) systems. Since pseudowords inherently have reduced ambiguity, they provide a controlled environment for assessing semantic alignment algorithms across languages.
+\item \textbf{Machine Translation}: The pseudodictionary increases machine translation performance by reducing polysemy, enabling models to learn clearer, sense-specific mappings that minimize mistranslations and improve lexical precision.
+\end{itemize}
 
 \begin{thebibliography}{8}
+\bibitem{BabelNet2012}
+Navigli, R., Ponzetto, S.P.: BabelNet: The Automatic Construction, Evaluation and Application of a Wide-Coverage Multilingual Semantic Network. Artificial Intelligence 193, 217--250 (2012). \url{https://doi.org/10.1016/j.artint.2012.07.001}
+\bibitem{Translation2003}
+Lee Hyun, Yoon Juntae, Kim Gil-Chang. (2003). Translation Selection by Combining Multiple Measures for Sense Disambiguation and Word Selection. Int. J. Comput. Proc. Oriental Lang.. 16. 219-239. \url{https://doi.org/10.1142/S0219427903000905}. 
 \end{thebibliography}
+
 \end{document}
