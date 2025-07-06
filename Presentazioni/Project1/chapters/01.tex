@@ -2,6 +2,122 @@
 
 \section{Il Progetto}
 
-\subsection{Scelte Progettuali}
+La consegna del progetto prevedeva di implementare l'algoritmo CKY (Cocke-Kasami-Younger), un algoritmo per il parsing di grammatiche context-free in CNF (Chomsky Normal Form).
+
+\subsection{CKY in Breve}
+
+\paragraph{Concetti chiave:}
+
+\begin{itemize}
+  \item La grammatica fornita deve essere in CNF:
+    \begin{itemize}
+      \item $A$ $\rightarrow$ $B C$ (con $B$ e $C$ simboli non-terminali). 
+      \item $A$ $\rightarrow$ $a$ (con $a$ simbolo terminale). 
+    \end{itemize}
+  \item Programmazione dinamica bottom-up.
+\end{itemize}
+
+\qs{}{Come funziona l'algoritmo?}
+
+\paragraph{Prendiamo in considerazione una stringa $s = w_1,\dots, w_n$:}
+
+\begin{enumerate}
+  \item \textbf{Inizializzazione:} 
+    \begin{itemize}
+      \item Viene creata una matrice $T$ di dimensioni $n x n$ dove $T[i][j]$ contiene l'insieme dei simboli non terminali che possono essere generati dalla sottostringa $w[i\dots j]$. 
+      \item Per ogni parola $w_i$ in input: 
+      \begin{itemize}
+        \item Per ogni regola $A \rightarrow w_i$, viene aggiunta $A$ a $T[i][i]$
+      \end{itemize}
+    \end{itemize}
+  
+
+\item \textbf{Filling the table:}
+  \begin{itemize}
+    \item Per ogni lunghezza di sottostringa $l$ da $2$ a $n$:
+    \item[] Per ogni indice iniziale $i$ da $0$ a $n - l$:
+    \item[] \quad Sia $j = i + l - 1$
+    \item[] \quad Per ogni punto di divisione $k$ da $i$ a $j - 1$:
+    \item[] \quad \quad Per ogni regola binaria $A \rightarrow B \ C$:
+    \item[] \quad \quad \quad Se $B \in T[i][k]$ e $C \in T[k+1][j]$, allora:
+    \item[] \quad \quad \quad \quad Aggiungi $A$ a $T[i][j]$
+  \end{itemize}
+
+  \item \textbf{Finale:}
+    \begin{itemize}
+      \item Se il simbolo iniziale della grammatica ($S$) è presente in $T[0][n-1]$, allora la stringa appartiene al linguaggio generato dalla grammatica.
+      \item In caso contrario, la stringa non è derivabile secondo le regole della grammatica.
+    \end{itemize}
+\end{enumerate}
 
 \section{Semplice Grammatica Quenya CF}
+
+
+\begin{tcolorbox}[title=Grammatica in CNF,colback=gray!5!white,colframe=gray!75!black]
+\begin{align*}
+S &\rightarrow NP\ VP \\
+S &\rightarrow \text{Pronverb}\ \text{NP} \\
+\\
+NP &\rightarrow Det\ NP \\
+NP &\rightarrow NP\ \text{Noun} \\
+NP &\rightarrow \text{hesto} \mid \text{macil} \mid \text{aran} \mid \text{aiwi} \mid \text{eldar} \mid \text{atan} \mid \text{eldan} \mid \text{lumba} \mid \text{tecil} \\
+Noun &\rightarrow \text{hesto} \mid \text{macil} \mid \text{aran} \mid \text{aiwi} \mid \text{eldar} \mid \text{atan} \mid \text{eldan} \mid \text{lumba} \mid \text{tecil} \\
+VP &\rightarrow Verb\ NP \\
+\\
+\text{Pronverb} &\rightarrow \text{Nanye} \mid \text{Nalme} \\
+\text{Verb} &\rightarrow \text{same} \mid \text{tira} \mid \text{antane} \\
+\text{Det} &\rightarrow \text{I}
+\end{align*}
+\end{tcolorbox}
+
+
+\paragraph{Per costruire questa semplice grammatica si è partiti da un'analisi di 5 frasi:}
+
+\begin{enumerate}
+  \item I hesto samë macil. 
+    \begin{itemize}
+      \item $S \to NP\ VP$ 
+      \item $NP \to Det\ NP$
+      \item $Noun \to hesto$ 
+      \item $VP \to Verb\ NP$ 
+      \item $Verb \to same$
+      \item $Noun \to macil$
+    \end{itemize}
+  \item I aran tíra aiwi. 
+    \begin{itemize}
+      \item $S \to NP\ VP$ 
+      \item $NP \to Det\ NP$ 
+      \item $Det \to i$ 
+      \item $NP \to aran$ 
+      \item $VP \to Verb\ NP$
+      \item $Verb \to tira$ 
+      \item $NP \to aiwi$
+    \end{itemize}
+  \item Nanye lumba.
+    \begin{itemize}
+      \item $S \to Pronverb\ NP$
+      \item $Pronverb \to Nanye$ 
+      \item $Noun \to lumba$
+    \end{itemize}
+  \item Nálmë eldar. 
+    \begin{itemize}
+      \item $S \to Pronverb\ NP$ 
+      \item $Pronverb \to Nalme$
+      \item $NP \to eldar$
+    \end{itemize}
+  \item I atan antanë i eldan tecil.
+    \begin{itemize}
+      \item $S \to NP\ VP$
+      \item $NP \to Det\ NP$
+      \item $Det \to i$
+      \item $NP \to atan$
+      \item $VP \to Verb\ NP$
+      \item $Verb \to antane$
+      \item $NP \to Det\ NP$
+      \item $Det \to i$
+      \item $NP \to NP\ Noun$
+      \item $NP \to eldan$
+      \item $Noun \to tecil$
+    \end{itemize}
+\end{enumerate}
+

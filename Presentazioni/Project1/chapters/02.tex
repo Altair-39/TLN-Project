@@ -32,15 +32,110 @@ for length in 2..=n {
 
 \subsection{Struttura}
 
+\begin{itemize}
+  \item Il primo loop (\texttt{for length in 2..=n}) va a iterare sulla lunghezza delle sottostringhe da 2 fino alla lunghezza della frase $n$. 
+  \item Successivamente (\texttt{for i in 0..=n - length \{ let j = i + length - 1; \}}), per una data lunghezza di sottostringa, si considerano tutte le possibili posizioni iniziali $i$, calcolando la posizione finale $j$.
+  \item Il terzo loop (\texttt{for k in i..j}) esplora tutte le possibili divisioni (punti di split) della sottostringa corrente, dividendola in due parti: $[i..k]$ e $[k+1..j]$.
+  \item Per ogni possibile divisione, si estraggono i sottoinsiemi di simboli non terminali presenti nelle celle $table[i][k]$ e $table[k+1][j]$, che rappresentano rispettivamente il lato sinistro e destro della regola binaria.
+  \item Per ogni combinazione di simboli $left$ e $right$ nei due insiemi, si consultano le regole della grammatica alla ricerca di una regola $A \rightarrow left\ right$ valida.
+  \item Se esiste una regola del genere, si crea un nuovo nodo dell'albero sintattico con simbolo $A$ e figli $left$ e $right$, e si inserisce questo nodo nella cella $table[i][j]$.
+  \item Alla fine dell'algoritmo, la cella $table[0][n-1]$ conterrà tutti i possibili alberi sintattici completi che derivano l'intera frase. Se tra questi alberi è presente un nodo con simbolo iniziale della grammatica ($S$), allora la frase è grammaticalmente valida.
+\end{itemize}
+
+\nt{La complessità è $O(n^3)$ perché ci sono $n^2$ celle nella matrice del CKY e per ogni cella si provano $n$ possibili "split point".}
+
 \subsection{Output}
+
+Il CKY originale è un recognizer che restituisce solo se una frase appartiene o meno alla grammatica. In questo caso è stata implementata una semplice estensione per cui viene restituito anche l'albero di parsing generato dalla frase come JSON. 
 
 \section{La Gestione delle Grammatiche}
 
 \subsection{Struttura}
 
-\begin{lstlisting}[language=rust, caption = Creazione delle regole per la grammatica]    
-let rules: HashMap<String, Vec<Vec<String>>> =
+\begin{lstlisting}[language=rust, caption = Struttura rappresentante una grammatica CFG]    
+pub struct Cfg {
+    /// Grammar rules stored as a map from non-terminal symbols to possible RHS sequences.
+    rules: HashMap<String, Vec<Vec<String>>>,
+}
+\end{lstlisting}
+\subsubsection{}
+Questa struttura (\texttt{struct}) rappresenta una grammatica libera dal contesto (CFG) utilizzando una \texttt{HashMap}. La chiave è un simbolo non terminale (\texttt{String}), mentre il valore associato è un vettore di vettori di stringhe (\texttt{Vec<Vec<String>>}), dove ciascun vettore interno rappresenta una possibile produzione per quel simbolo.
+
+\begin{lstlisting}[language=rust, caption = Inizializzazione di una grammatica]    
+pub fn new(grammar: &str) -> Self {
+        let file_path = format!("rsrc/grammar/{}.json", grammar);
+
+        if !Path::new(&file_path).exists() {
+            panic!("Grammar file '{}' does not exist", file_path);
+        }
+
+        let json_data = fs::read_to_string(&file_path)
+            .unwrap_or_else(|_| panic!("Failed to read JSON file: {}", file_path));
+
+        let rules: HashMap<String, Vec<Vec<String>>> =
             serde_json::from_str(&json_data).expect("Failed to parse JSON");
+
+        Cfg { rules }
+}
+\end{lstlisting}
+\subsubsection{}
+
+Il metodo \texttt{new} consente l'inizializzazione della grammatica a partire da un file JSON. Viene costruito dinamicamente il percorso del file, che viene poi letto e deserializzato tramite \texttt{serde\_json}.
+Grazie al sistema di tipi statici di Rust, il parser JSON verifica che la struttura dei dati nel file corrisponda esattamente al tipo previsto: \texttt{HashMap<String, Vec<Vec<String>>>}. In questo modo, la deserializzazione fallisce immediatamente se il formato del file non è corretto, garantendo maggiore sicurezza e robustezza.
+
+
+\begin{lstlisting}[language=rust, caption = Ricerca delle produzioni inverse nella grammatica]
+pub fn get_non_terminals(&self, sequence: &[String]) -> HashSet<String> {
+    let mut result = HashSet::new();
+    for (lhs, rhs_list) in &self.rules {
+        for rhs in rhs_list {
+            if *rhs == sequence {
+                result.insert(lhs.clone());
+            }
+        }
+    }
+    result
+}
+\end{lstlisting}
+\subsubsection{}
+Questa funzione ha un ruolo fondamentale durante il parsing CKY. Riceve in input una sequenza di simboli (esempio \texttt{["NP", "VP"]}) e restituisce tutti i simboli non terminali che, secondo la grammatica caricata, possono generare direttamente quella sequenza.
+L’algoritmo itera attraverso tutte le regole della grammatica (\texttt{rules}), e confronta ogni produzione con la sequenza passata in input. Se trova una corrispondenza esatta, inserisce il simbolo di sinistra (LHS) all’interno di un \texttt{HashSet}, che rappresenta l’insieme dei simboli non terminali validi per quella specifica produzione.
+Questa operazione è essenziale nella fase centrale dell'algoritmo CKY, quando si costruiscono nuovi nodi dell'albero sintattico combinando due sottostrutture: si verifica infatti se esiste una regola binaria $A \rightarrow B\ C$ che possa giustificare la fusione dei due figli.
+\subsection{Scrivere Grammatiche}
+
+Le grammatiche devono essere fornite come JSON. Per rendere più facile e veloce la scrittura è stato implementato un semplice converter che prende una grammatica in CNF scritta in modo naturale e la converte in JSON.
+
+\begin{lstlisting}[language=rust, caption = Converter]
+
+   for line in reader.lines() {
+        let line = line?;
+        if line.trim().is_empty() || line.trim().starts_with("//") {
+            continue;
+        }
+
+        if let Some(caps) = re.captures(&line) {
+            let lhs = caps[1].to_string();
+            let rhs = caps[2]
+                .split('|')
+                .map(|s| s.trim())
+                .filter(|s| !s.is_empty())
+                .map(|rhs_str| {
+                    rhs_str
+                        .split_whitespace()
+                        .map(|s| {
+                            if terminal_re.is_match(s) {
+                                terminal_re.replace(s, "$1").to_string()
+                            } else {
+                                s.to_string()
+                            }
+                        })
+                        .collect::<Vec<String>>()
+                })
+                .collect::<Vec<Vec<String>>>();
+
+            rules_map.entry(lhs).or_default().extend(rhs);
+        }
+    }
+
 \end{lstlisting}
 
-\subsection{Scrivere e Aggiungere Grammatiche}
