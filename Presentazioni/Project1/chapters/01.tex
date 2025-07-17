@@ -50,13 +50,75 @@ La consegna del progetto prevedeva di implementare l'algoritmo CKY (Cocke-Kasami
     \end{itemize}
 \end{enumerate}
 
-\section{Semplice Grammatica Quenya CF}
+\section{Test}
 
+\subsection{Jurafsky e Prova}
 
-\begin{tcolorbox}[title=Grammatica in CNF,colback=gray!5!white,colframe=gray!75!black]
+L'algoritmo è stato inizialmente testato con una grammatica di prova vista a lezione. 
+
+\begin{tcolorbox}[title=Esempio "Paolo ama Francesca dolcemente",colback=gray!5!white,colframe=gray!75!black]
 \begin{align*}
 S &\rightarrow NP\ VP \\
-S &\rightarrow \text{Pronverb}\ \text{NP} \\
+\\
+VP &\rightarrow VP\ \text{ADV} \\
+VP &\rightarrow V\ NP \\
+\\
+NP &\rightarrow \text{Paolo} \mid \text{Francesca} \\
+V &\rightarrow \text{ama} \\
+ADV &\rightarrow \text{dolcemente}
+\end{align*}
+\end{tcolorbox}
+
+\subsubsection{}
+\pagebreak
+Successivamente lo si è usato per la grammatica L1 proposta da Jurafsky. 
+
+
+\begin{tcolorbox}[title=Grammatica L1 (Jurafsky),colback=gray!5!white,colframe=gray!75!black]
+\begin{align*}
+S &\rightarrow NP\ VP \\
+S &\rightarrow X1\ VP \\
+S &\rightarrow \text{book} \mid \text{include} \mid \text{prefer} \\
+S &\rightarrow \text{Verb}\ NP \\
+S &\rightarrow X2\ PP \\
+S &\rightarrow \text{Verb}\ PP \\
+S &\rightarrow VP\ PP \\
+\\
+X1 &\rightarrow \text{Aux}\ NP \\
+X2 &\rightarrow \text{Verb}\ NP \\
+\\
+NP &\rightarrow \text{I} \mid \text{she} \mid \text{me} \\
+NP &\rightarrow \text{United} \mid \text{Houston} \\
+NP &\rightarrow \text{Det}\ \text{Nominal} \\
+NP &\rightarrow \text{Det}\ \text{Noun} \\
+\\
+Nominal &\rightarrow \text{book} \mid \text{flight} \mid \text{meal} \mid \text{money} \mid \text{morning} \\
+Nominal &\rightarrow \text{Nominal}\ \text{Noun} \\
+Nominal &\rightarrow \text{Nominal}\ \text{PP} \\
+\\
+VP &\rightarrow \text{book} \mid \text{include} \mid \text{prefer} \\
+VP &\rightarrow \text{Verb}\ NP \\
+VP &\rightarrow X2\ PP \\
+VP &\rightarrow \text{Verb}\ PP \\
+VP &\rightarrow VP\ PP \\
+\\
+PP &\rightarrow \text{Preposition}\ NP \\
+\\
+Det &\rightarrow \text{the} \mid \text{that} \mid \text{this} \mid \text{a} \\
+Noun &\rightarrow \text{book} \mid \text{flight} \mid \text{meal} \mid \text{money} \mid \text{morning} \\
+Verb &\rightarrow \text{book} \mid \text{include} \mid \text{prefer} \\
+Pronoun &\rightarrow \text{I} \mid \text{she} \mid \text{me} \\
+Aux &\rightarrow \text{does} \mid \text{do} \\
+Preposition &\rightarrow \text{from} \mid \text{to} \mid \text{on} \mid \text{near} \mid \text{through}
+\end{align*}
+\end{tcolorbox}
+
+\subsection{Semplice Grammatica Quenya CF}
+
+\begin{tcolorbox}[title=Quenya,colback=gray!5!white,colframe=gray!75!black]
+\begin{align*}
+S &\rightarrow NP\ VP \\
+S &\rightarrow \text{Pronoun}\ \text{NP} \\
 \\
 NP &\rightarrow Det\ NP \\
 NP &\rightarrow NP\ \text{Noun} \\
@@ -64,7 +126,7 @@ NP &\rightarrow \text{hesto} \mid \text{macil} \mid \text{aran} \mid \text{aiwi}
 Noun &\rightarrow \text{hesto} \mid \text{macil} \mid \text{aran} \mid \text{aiwi} \mid \text{eldar} \mid \text{atan} \mid \text{eldan} \mid \text{lumba} \mid \text{tecil} \\
 VP &\rightarrow Verb\ NP \\
 \\
-\text{Pronverb} &\rightarrow \text{Nanye} \mid \text{Nalme} \\
+\text{Pronoun} &\rightarrow \text{Nanye} \mid \text{Nalme} \\
 \text{Verb} &\rightarrow \text{same} \mid \text{tira} \mid \text{antane} \\
 \text{Det} &\rightarrow \text{I}
 \end{align*}
@@ -95,14 +157,14 @@ VP &\rightarrow Verb\ NP \\
     \end{itemize}
   \item Nanye lumba.
     \begin{itemize}
-      \item $S \to Pronverb\ NP$
-      \item $Pronverb \to Nanye$ 
+      \item $S \to Pronoun\ NP$
+      \item $Pronoun \to Nanye$ 
       \item $Noun \to lumba$
     \end{itemize}
   \item Nálmë eldar. 
     \begin{itemize}
-      \item $S \to Pronverb\ NP$ 
-      \item $Pronverb \to Nalme$
+      \item $S \to Pronoun\ NP$ 
+      \item $Pronoun \to Nalme$
       \item $NP \to eldar$
     \end{itemize}
   \item I atan antanë i eldan tecil.
